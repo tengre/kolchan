@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: gitadd.sh 5 2016-06-22 15:00:41+04:00 toor
+# $Id: gitadd.sh 7 2016-06-22 15:57:47+04:00 toor $
 #
 . bashlyk
 #
@@ -10,7 +10,7 @@ udfMain() {
 
 	udfThrowOnCommandNotFound date git grep sed
 
-	local a=( $( git shortlog -sn ) ) fn ic ts ui
+	local a=( $( git shortlog -s ) ) fn ic ts ui
 	fmt='sed -i -r -e "s/%sId(.*)?%s/%s/" %s'
 
 	eval set -- "$(_ sArg)"
