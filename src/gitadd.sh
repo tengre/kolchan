@@ -22,7 +22,7 @@ udfMain() {
 		fn="${1##*/}"
 		ui="$USER"
 
-		if udfOnEmptyVariable warn fn ic ts ui; then
+		if udfWarnOnEmptyVariable fn ic ts ui; then
 
 			s="$( printf '\044Id: %s %d %s %s \044\n' "$fn" "$ic" "$ts" "$ui" )"
 			eval "$( printf "$fmt" '\\\$' '\\\$' '$s' '$fn')"
@@ -36,8 +36,6 @@ udfMain() {
 		echo "$1 not modified, but may be indexed..."
 
 	fi
-
-
 
 }
 #
