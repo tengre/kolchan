@@ -1,6 +1,11 @@
 #!/bin/bash
-
+#
+# $Id: svnlog2revs.sh 4 2016-06-22 14:10:38+04:00 toor $
+#
 . bashlyk
+#
+#
+#
 
 udfMain() {
   [[ -n "$1" && -s "$1" ]] || eval $(udfOnError throw iErrorEmptyOrMissingArgument '$1')
