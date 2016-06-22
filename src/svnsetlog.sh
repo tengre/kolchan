@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#
+# $Id: svnsetlog.sh 3 2016-06-22 13:49:50+04:00 toor $
 #
 . bashlyk
 #
