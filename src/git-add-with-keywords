@@ -1,11 +1,41 @@
 #!/bin/bash
 #
-# $Id: gitadd.sh 10 2016-06-23 12:41:05+04:00 toor $
 #
 . bashlyk
 #
 #
 #
+eval "__aId=( $Id: git-add-with-keywords 12 2016-06-23 15:09:19+04:00 toor $ )"
+#
+#
+#
+udfUsage() {
+
+	printf "\n   $(_ s0) rev${__aId[2]} ${__aId[3]}, (c) 2016\n   'git add <file>' with keyword emulation\n"
+
+#****h* svn2git/git-add-with-keywords
+#  DESCRIPTION
+#    git-add-with-keywords - add svn-keyword 'Id' emulation to indexed by GIT
+#    file
+#  AUTHOR
+#    Damir Sh. Yakupov <yds@bk.ru>
+#  ARGUMENTS
+	cat << _EOF | tr -d '#'
+
+   usage: $(_ s0) [ -h|--help ] | arg
+   where
+#    -h, --help - show this usage
+#    arg        - filename for adding to GIT repo index
+#
+   This version support only 'Id' keyword and single file for adding,
+   no directories or list from mask
+
+_EOF
+	[[ "$(_ iLastError)" == 0 ]] || echo "$(_ sLastError) ($(_ iLastError))"
+	exit $(_ iLastError)
+
+}
+#******
 udfMain() {
 
 	udfThrowOnCommandNotFound bc date git grep sed xargs
@@ -17,7 +47,9 @@ udfMain() {
 
 	eval set -- "$(_ sArg)"
 
-	[[ -d "$1" ]] && eval $( udfOnError exitecho iErrorNonValidArgument "this version do not support directories, only files \($1\)..." )
+	[[ -z "$1" || "$1" =~ ^--?h ]] && udfUsage
+
+	[[ -d "$1" ]] && udfUsage
 
 	[[ -f "$1" && -n "$( git status -s "$1" | grep -P "^[ AM?][M?]\s$1" )" ]] || {
 
@@ -30,7 +62,7 @@ udfMain() {
 	ts="$( date --rfc-3339=s )"
 	ui="$(_ sUser)"
 
-	if udfWarnOnEmptyVariable fn ic ts ui; then
+	if udfThrowOnEmptyVariable fn ic ts ui; then
 
 		s="$( printf '\044Id: %s %d %s %s \044\n' "$fn" "$ic" "$ts" "$ui" )"
 		eval "$( printf "$fmt" '\\\$' '\\\$' '$s' '$fn')" && git add "$1"
