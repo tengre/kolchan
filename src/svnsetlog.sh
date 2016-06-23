@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: svnsetlog.sh 5 2016-06-22 15:11:08+04:00 toor $
+# $Id: svnsetlog.sh 13 2016-06-23 15:34:08+04:00 toor $
 #
 . bashlyk
 #
@@ -10,6 +10,8 @@
 : ${pathSVN:=/opt/dat/svn}
 
 udfMain() {
+
+	udfThrowOnCommandNotFound svnadmin
 
 	eval set -- "$(_ sArg)"
 

@@ -1,12 +1,14 @@
 #!/bin/bash
 #
-# $Id: svnlog2revs.sh 5 2016-06-22 15:10:51+04:00 toor $
+# $Id: svnlog2revs.sh 13 2016-06-23 15:33:42+04:00 toor $
 #
 . bashlyk
 #
 #
 #
 udfMain() {
+
+	udfThrowOnCommandNotFound rm sed touch
 
 	eval set -- "$(_ sArg)"
 
