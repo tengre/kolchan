@@ -5,7 +5,7 @@
 #
 #
 #
-eval "__aId=( $Id: git-add-with-keywords 12 2016-06-23 15:09:19+04:00 toor $ )"
+eval "__aId=( $Id: git-add-with-keywords 14 2016-07-10 20:05:08+04:00 toor $ )"
 #
 #
 #
@@ -43,7 +43,17 @@ udfMain() {
 	local fmt fn ic ts ui
 
 	fmt='sed -i -r -e "s/%sId(.*)?%s/%s/" %s'
-	ic=$( git shortlog -s | grep -oP '^\s+\d+\s+' | xargs | tr ' ' '+' | bc )
+
+	if LC_ALL=C git log 2>&1 | grep '^fatal:.* not have any commits' >/dev/null;
+	then
+
+		ic=0
+
+	else
+
+		ic=$( git shortlog -s | grep -oP '^\s+\d+\s+' | xargs | tr ' ' '+' | bc )
+
+	fi
 
 	eval set -- "$(_ sArg)"
 
