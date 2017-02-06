@@ -5,13 +5,21 @@
 #
 #
 #
-eval "__aId=( $Id: git-add-with-keywords 14 2016-07-10 20:05:08+04:00 toor $ )"
+eval "__aId=( $Id: git-add-with-keywords 15 2017-02-06 17:08:34+04:00 toor $ )"
 #
 #
 #
 udfUsage() {
 
-	printf "\n   $(_ s0) rev${__aId[2]} ${__aId[3]}, (c) 2016\n   'git add <file>' with keyword emulation\n"
+  local rc=$?
+
+  printf -- "\n  %s %s %s, (c) 2016-%d\n  %s %s\n"                             \
+            "$(_ s0)"                                                          \
+            "rev${__aId[2]}"                                                   \
+            "${__aId[3]}"                                                      \
+            "$(date +%Y)"                                                      \
+            "'git add <file(s)>'"                                              \
+            "with '\$Id: git-add-with-keywords 15 2017-02-06 17:08:34+04:00 toor $' keyword emulation"
 
 #****h* svn2git/git-add-with-keywords
 #  DESCRIPTION
@@ -20,64 +28,105 @@ udfUsage() {
 #  AUTHOR
 #    Damir Sh. Yakupov <yds@bk.ru>
 #  ARGUMENTS
-	cat << _EOF | tr -d '#'
+	cat <<-'EOF' | tr -d '#'
 
-   usage: $(_ s0) [ -h|--help ] | arg
-   where
-#    -h, --help - show this usage
-#    arg        - filename for adding to GIT repo index
-#
-   This version support only 'Id' keyword and single file for adding,
-   no directories or list from mask
+  usage: $(_ s0) [ -h|--help ] | files
+    where
+    #    -h, --help - show this usage
+    #    files      - filenames for adding to GIT repo index
+    #
+  This version support files adding, no directories or list from mask
 
-_EOF
-	[[ "$(_ iLastError)" == 0 ]] || echo "$(_ sLastError) ($(_ iLastError))"
-	exit $(_ iLastError)
+	EOF
+
+  eval $( udfOnError exit $rc )
 
 }
 #******
+udfAdd() {
+
+  udfThrowOnCommandNotFound bc date git grep sed xargs
+
+  local fmt fn ic ts ui wcd wd
+
+  fmt='sed -i -r -e "s/%sId(.*)?%s/%s/" %s'
+
+  if LC_ALL=C git log 2>&1 | grep '^fatal:.* not have any commits' >/dev/null;
+  then
+
+    ic=0
+
+  else
+
+    ic=$( git shortlog -s | grep -oP '^\s+\d+\s+' | xargs | tr ' ' '+' | bc )
+
+  fi
+
+
+  [[ -d "$*" ]] && eval $(                                                     \
+                                                                               \
+    udfOnError retwarn InvalidArgument "$* - directories not supported now"    \
+                                                                               \
+  )
+
+
+  if [[ -f "$*" && -n "$( git status -s "$*" | grep -P "^[ AM?][M?]\s$*" )" ]];
+  then
+
+    udfDebug 0 "${*}: git status ok."
+
+  else
+
+    eval $(                                                                    \
+                                                                               \
+      udfOnError retwarn InvalidArgument                                       \
+        "$* is mask, not exist or not modified, but may be indexed..."         \
+                                                                               \
+    )
+
+  fi
+
+   fn="${*##*/}"
+   wd="${*%/*}"
+  cwd="$(pwd)"
+   ic=$(( ic + 1 ))
+   ts="$( date --rfc-3339=s )"
+   ui="$(_ sUser)"
+
+  if udfThrowOnEmptyVariable fn ic ts ui; then
+
+    s="$( printf '\044Id: %s %d %s %s \044\n' "$fn" "$ic" "$ts" "$ui" )"
+
+    if cd "$wd"; then
+
+      eval "$( printf "$fmt" '\\\$' '\\\$' '$s' '$fn')" \
+        || eval $( udfOnError retwarn "Id not modified.." )
+
+      git add "$fn" && udfDebug 0 "${*}: succesfully added to git with Id $ic."
+
+      cd $cwd
+
+    else
+
+      eval $( udfOnError retwarn NoSuchFileOrDir "$wd" )
+
+    fi
+
+  fi
+
+}
+#
 udfMain() {
 
-	udfThrowOnCommandNotFound bc date git grep sed xargs
+  eval set -- "$(_ sArg)"
 
-	local fmt fn ic ts ui
+  [[ ! $1 || $1 =~ ^--?h ]] && udfUsage
 
-	fmt='sed -i -r -e "s/%sId(.*)?%s/%s/" %s'
+  for fn in "$@"; do
 
-	if LC_ALL=C git log 2>&1 | grep '^fatal:.* not have any commits' >/dev/null;
-	then
+    udfAdd $fn
 
-		ic=0
-
-	else
-
-		ic=$( git shortlog -s | grep -oP '^\s+\d+\s+' | xargs | tr ' ' '+' | bc )
-
-	fi
-
-	eval set -- "$(_ sArg)"
-
-	[[ -z "$1" || "$1" =~ ^--?h ]] && udfUsage
-
-	[[ -d "$1" ]] && udfUsage
-
-	[[ -f "$1" && -n "$( git status -s "$1" | grep -P "^[ AM?][M?]\s$1" )" ]] || {
-
-		eval $(udfOnError retwarn iErrorNonValidArgument "$1 is mask, not exist or not modified, but may be indexed...")
-
-	}
-
-	fn="${1##*/}"
-	ic=$(( ic + 1 ))
-	ts="$( date --rfc-3339=s )"
-	ui="$(_ sUser)"
-
-	if udfThrowOnEmptyVariable fn ic ts ui; then
-
-		s="$( printf '\044Id: %s %d %s %s \044\n' "$fn" "$ic" "$ts" "$ui" )"
-		eval "$( printf "$fmt" '\\\$' '\\\$' '$s' '$fn')" && git add "$1"
-
-	fi
+  done
 
 }
 #
