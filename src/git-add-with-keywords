@@ -5,21 +5,20 @@
 #
 #
 #
-eval "__aId=( $Id: git-add-with-keywords 15 2017-02-06 17:08:34+04:00 toor $ )"
+eval "__aId=( $Id: git-add-with-keywords 16 2017-02-06 22:21:49+04:00 toor $ )"
 #
 #
 #
 udfUsage() {
 
-  local rc=$?
+  local rc=$? s=$(printf -- '\044Id\044')
 
-  printf -- "\n  %s %s %s, (c) 2016-%d\n  %s %s\n"                             \
+  printf -- "\n  %s %s %s, (c) %s\n" \
             "$(_ s0)"                                                          \
             "rev${__aId[2]}"                                                   \
             "${__aId[3]}"                                                      \
-            "$(date +%Y)"                                                      \
-            "'git add <file(s)>'"                                              \
-            "with '\$Id: git-add-with-keywords 15 2017-02-06 17:08:34+04:00 toor $' keyword emulation"
+            "2016-$(date +%Y)"
+
 
 #****h* svn2git/git-add-with-keywords
 #  DESCRIPTION
@@ -28,14 +27,14 @@ udfUsage() {
 #  AUTHOR
 #    Damir Sh. Yakupov <yds@bk.ru>
 #  ARGUMENTS
-	cat <<-'EOF' | tr -d '#'
+	cat <<-EOF | tr -d '#'
 
-  usage: $(_ s0) [ -h|--help ] | files
-    where
-    #    -h, --help - show this usage
-    #    files      - filenames for adding to GIT repo index
-    #
-  This version support files adding, no directories or list from mask
+  usage: $(_ s0) [ -h|--help ] | <files>
+  where
+  #  -h, --help - show this usage and exit
+  #  <files>    - filenames for adding to GIT repository index with $s keyword
+  #               emulation
+  [!]: This version support files adding only, no directories or list from mask
 
 	EOF
 
@@ -45,7 +44,7 @@ udfUsage() {
 #******
 udfAdd() {
 
-  udfThrowOnCommandNotFound bc date git grep sed xargs
+
 
   local fmt fn ic ts ui wcd wd
 
@@ -102,7 +101,7 @@ udfAdd() {
       eval "$( printf "$fmt" '\\\$' '\\\$' '$s' '$fn')" \
         || eval $( udfOnError retwarn "Id not modified.." )
 
-      git add "$fn" && udfDebug 0 "${*}: succesfully added to git with Id $ic."
+      git add "$fn" && udfDebug 0 "${*}: successfully added to git with Id $ic."
 
       cd $cwd
 
@@ -117,6 +116,8 @@ udfAdd() {
 }
 #
 udfMain() {
+
+  udfThrowOnCommandNotFound bc date git grep sed xargs
 
   eval set -- "$(_ sArg)"
 
