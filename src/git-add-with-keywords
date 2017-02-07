@@ -5,7 +5,7 @@
 #
 #
 #
-eval "__aId=( $Id: git-add-with-keywords 17 2017-02-07 09:16:16+04:00 toor $ )"
+eval "__aId=( $Id: git-add-with-keywords 18 2017-02-07 19:50:10+04:00 toor $ )"
 #
 #
 #
@@ -83,9 +83,10 @@ udfAdd() {
 
   fi
 
-   fn="${*##*/}"
-   wd="${*%/*}"
+  [[ $* == ${*%/*} ]] && wd=. || wd="${*%/*}"
+
   cwd="$(pwd)"
+   fn="${*##*/}"
    ic=$(( ic + 1 ))
    ts="$( date --rfc-3339=s )"
    ui="$(_ sUser)"
