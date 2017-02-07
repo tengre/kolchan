@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: svnlog2revs.sh 13 2016-06-23 15:33:42+04:00 toor $
+# $Id: svnlog2revs.sh 17 2017-02-07 09:15:25+04:00 toor $
 #
 . bashlyk
 #
@@ -8,63 +8,63 @@
 #
 udfMain() {
 
-	udfThrowOnCommandNotFound rm sed touch
+  udfThrowOnCommandNotFound rm sed touch
 
-	eval set -- "$(_ sArg)"
+  eval set -- "$(_ sArg)"
 
-	[[ -n "$1" && -s "$1" ]] || eval $(udfOnError throw iErrorEmptyOrMissingArgument '$1')
+  [[ -n "$1" && -s "$1" ]] || eval $(udfOnError throw iErrorEmptyOrMissingArgument '$1')
 
-	local s fn fnRev tsRev
+  local s fn fnRev tsRev
 
-	fn=$1
+  fn=$1
 
-	sed -i -r -e "s/\t/%SVNLOG2REVSTABULA%/g" -e "s/^(\s+)/%SVNLOG2REVSIDENT%\1/" $fn
+  sed -i -r -e "s/\t/%SVNLOG2REVSTABULA%/g" -e "s/^(\s+)/%SVNLOG2REVSIDENT%\1/" $fn
 
-	while read s; do
+  while read s; do
 
-		[[ "$s" =~ ^------------------------------------------------------------------------$ ]] && continue
-		if [[ "$s" =~ ^(r[0-9]+)[[:space:]]\|[[:space:]][[:graph:]]+[[:space:]]\|[[:space:]](.*)[[:space:]]\(.*\).*[0-9]+.line(s)?$ ]]; then
+    [[ "$s" =~ ^------------------------------------------------------------------------$ ]] && continue
+    if [[ "$s" =~ ^(r[0-9]+)[[:space:]]\|[[:space:]][[:graph:]]+[[:space:]]\|[[:space:]](.*)[[:space:]]\(.*\).*[0-9]+.line(s)?$ ]]; then
 
-			if [[ -n "$fnRev" && -f "$fnRev" && -n "$tsRev" ]]; then
+      if [[ -n "$fnRev" && -f "$fnRev" && -n "$tsRev" ]]; then
 
-				[[ "$2" == "add-svn-rev" ]] && printf -- "--\n--\t(svn rev %s)\n" "$fnRev" >> $fnRev
-				sed -i -r -e "s/%SVNLOG2REVSTABULA%/\t/g" -e "s/%SVNLOG2REVSIDENT%//" $fnRev
-				touch --date="$tsRev" $fnRev
+        [[ "$2" == "add-svn-rev" ]] && printf -- "--\n--\t(svn rev %s)\n" "$fnRev" >> $fnRev
+        sed -i -r -e "s/%SVNLOG2REVSTABULA%/\t/g" -e "s/%SVNLOG2REVSIDENT%//" $fnRev
+        touch --date="$tsRev" $fnRev
 
-			fi
+      fi
 
-			if [[ -n "${BASH_REMATCH[1]}" ]]; then
+      if [[ -n "${BASH_REMATCH[1]}" ]]; then
 
-				fnRev="${BASH_REMATCH[1]}"
-				tsRev="${BASH_REMATCH[2]}"
-				rm -f $fnRev
-				echo "$fnRev $tsRev"
+        fnRev="${BASH_REMATCH[1]}"
+        tsRev="${BASH_REMATCH[2]}"
+        rm -f $fnRev
+        echo "$fnRev $tsRev"
 
-			else
+      else
 
-				eval $(udfOnError throw iErrorUnexpected '$s')
+        eval $(udfOnError throw Unexpected '$s')
 
-			fi
+      fi
 
-			read s
-			continue
+      read s
+      continue
 
-		fi
+    fi
 
-		[[ "$fnRev" =~ ^r[0-9]+$ ]] || continue
-		echo "$s" >> $fnRev
+    [[ $fnRev =~ ^r[0-9]+$ ]] || continue
+    echo "$s" >> $fnRev
 
-	done < $fn
+  done < $fn
 
-	if [[ -n "$fnRev" && -f "$fnRev" && -n "$tsRev" ]]; then
+  if [[ $fnRev && -f "$fnRev" && -n "$tsRev" ]]; then
 
-		[[ "$2" == "add-svn-rev" ]] && printf -- "--\n--\t(svn rev %s)\n" "$fnRev" >> $fnRev
-		sed -i -r -e "s/%SVNLOG2REVSTABULA%/\t/g" -e "s/%SVNLOG2REVSIDENT%//" $fnRev
-		touch --date="$tsRev" $fnRev
+    [[ $2 == add-svn-rev ]] && printf -- "--\n--\t(svn rev %s)\n" "$fnRev" >> $fnRev
+    sed -i -r -e "s/%SVNLOG2REVSTABULA%/\t/g" -e "s/%SVNLOG2REVSIDENT%//" $fnRev
+    touch --date="$tsRev" $fnRev
 
-	fi
+  fi
 
-	sed -i -r -e "s/%SVNLOG2REVSTABULA%/\t/g" -e "s/%SVNLOG2REVSIDENT%//" $fn
+  sed -i -r -e "s/%SVNLOG2REVSTABULA%/\t/g" -e "s/%SVNLOG2REVSIDENT%//" $fn
 
 }
 #

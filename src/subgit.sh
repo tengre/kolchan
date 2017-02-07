@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: subgit.sh 13 2016-06-23 15:33:18+04:00 toor $
+# $Id: subgit.sh 17 2017-02-07 09:15:25+04:00 toor $
 #
 . bashlyk
 #
@@ -10,23 +10,22 @@
 : ${pathGIT:=/opt/dat/git}
 : ${fnAuthors:=~/src/authors}
 
-
 udfMain() {
 
-	eval set -- "$(_ sArg)"
-	[[ -n "$1" ]] || eval $(udfOnError throw iErrorEmptyOrMissingArgument)
+  eval set -- "$( _ sArg )"
 
-	udfThrowOnCommandNotFound subgit
+  udfOn MissingArgument throw $1
 
-	pathSVN+="/${1}"
-	pathGIT+="/${1}.git"
+  udfThrowOnCommandNotFound subgit
 
-	## TODO use svn(admin) and git tools for checking repos validity
-	[[ -d $pathSVN   ]] || eval $( udfOnError throw iErrorNoSuchFileOrDir $pathSVN   )
-	[[ -d $pathGIT   ]] || eval $( udfOnError throw iErrorNoSuchFileOrDir $pathGIT   )
-	[[ -f $fnAuthors ]] || eval $( udfOnError throw iErrorNoSuchFileOrDir $fnAuthors )
+  pathSVN+="/${1}"
+  pathGIT+="/${1}.git"
 
-	subgit import --authors-file $fnAuthors --svn-url file://$pathSVN $pathGIT
+  udfOn NoSuchFileOrDir throw $pathGIT $pathSVN $fnAuthors
+
+  ## TODO use svn(admin) and git tools for checking repos validity
+
+  subgit import --authors-file $fnAuthors --svn-url file://$pathSVN $pathGIT
 
 }
 #

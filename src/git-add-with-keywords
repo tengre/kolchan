@@ -5,7 +5,7 @@
 #
 #
 #
-eval "__aId=( $Id: git-add-with-keywords 16 2017-02-06 22:21:49+04:00 toor $ )"
+eval "__aId=( $Id: git-add-with-keywords 17 2017-02-07 09:16:16+04:00 toor $ )"
 #
 #
 #
@@ -44,8 +44,6 @@ udfUsage() {
 #******
 udfAdd() {
 
-
-
   local fmt fn ic ts ui wcd wd
 
   fmt='sed -i -r -e "s/%sId(.*)?%s/%s/" %s'
@@ -72,7 +70,7 @@ udfAdd() {
   if [[ -f "$*" && -n "$( git status -s "$*" | grep -P "^[ AM?][M?]\s$*" )" ]];
   then
 
-    udfDebug 0 "${*}: git status ok."
+    udfDebug 1 "${*}: git status ok."
 
   else
 
@@ -118,6 +116,8 @@ udfAdd() {
 udfMain() {
 
   udfThrowOnCommandNotFound bc date git grep sed xargs
+
+  local fn
 
   eval set -- "$(_ sArg)"
 
