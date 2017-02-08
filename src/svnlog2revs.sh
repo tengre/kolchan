@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: svnlog2revs.sh 17 2017-02-07 09:15:25+04:00 toor $
+# $Id: svnlog2revs.sh 19 2017-02-08 17:21:51+04:00 toor $
 #
 . bashlyk
 #
@@ -10,9 +10,9 @@ udfMain() {
 
   udfThrowOnCommandNotFound rm sed touch
 
-  eval set -- "$(_ sArg)"
+  udfOn NoSuchFileOrDir throw $1
 
-  [[ -n "$1" && -s "$1" ]] || eval $(udfOnError throw iErrorEmptyOrMissingArgument '$1')
+  eval set -- "$(_ sArg)"
 
   local s fn fnRev tsRev
 
