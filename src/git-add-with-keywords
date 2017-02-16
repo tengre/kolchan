@@ -5,7 +5,7 @@
 #
 #
 #
-eval "__aId=( $Id: git-add-with-keywords 18 2017-02-07 19:50:10+04:00 toor $ )"
+eval "__aId=( $Id: git-add-with-keywords 20 2017-02-16 17:04:45+04:00 toor $ )"
 #
 #
 #
@@ -29,12 +29,11 @@ udfUsage() {
 #  ARGUMENTS
 	cat <<-EOF | tr -d '#'
 
-  usage: $(_ s0) [ -h|--help ] | <files>
+  usage: $(_ s0) [ -h|--help ] | [<files>]
   where
   #  -h, --help - show this usage and exit
   #  <files>    - filenames for adding to GIT repository index with $s keyword
-  #               emulation
-  [!]: This version support files adding only, no directories or list from mask
+  #               emulation, default used git-status for file search
 
 	EOF
 
@@ -55,17 +54,15 @@ udfAdd() {
 
   else
 
-    ic=$( git shortlog -s | grep -oP '^\s+\d+\s+' | xargs | tr ' ' '+' | bc )
+    ic="$( git shortlog -s | grep -oP '^\s+\d+\s+' | xargs | tr ' ' '+' | bc )"
 
   fi
 
-
-  [[ -d "$*" ]] && eval $(                                                     \
+  [[ -d $* ]] && eval $(                                                       \
                                                                                \
     udfOnError retwarn InvalidArgument "$* - directories not supported now"    \
                                                                                \
   )
-
 
   if [[ -f "$*" && -n "$( git status -s "$*" | grep -P "^[ AM?][M?]\s$*" )" ]];
   then
@@ -85,7 +82,6 @@ udfAdd() {
 
   [[ $* == ${*%/*} ]] && wd=. || wd="${*%/*}"
 
-  cwd="$(pwd)"
    fn="${*##*/}"
    ic=$(( ic + 1 ))
    ts="$( date --rfc-3339=s )"
@@ -95,20 +91,10 @@ udfAdd() {
 
     s="$( printf '\044Id: %s %d %s %s \044\n' "$fn" "$ic" "$ts" "$ui" )"
 
-    if cd "$wd"; then
+    eval "$( printf "$fmt" '\\\$' '\\\$' '$s' '$*')" \
+      || eval $( udfOnError retwarn "Id not modified.." )
 
-      eval "$( printf "$fmt" '\\\$' '\\\$' '$s' '$fn')" \
-        || eval $( udfOnError retwarn "Id not modified.." )
-
-      git add "$fn" && udfDebug 0 "${*}: successfully added to git with Id $ic."
-
-      cd $cwd
-
-    else
-
-      eval $( udfOnError retwarn NoSuchFileOrDir "$wd" )
-
-    fi
+    git add $* && udfDebug 0 "${*}: successfully added to git with Id $ic."
 
   fi
 
@@ -118,17 +104,28 @@ udfMain() {
 
   udfThrowOnCommandNotFound bc date git grep sed xargs
 
-  local fn
+  local s
 
   eval set -- "$(_ sArg)"
 
-  [[ ! $1 || $1 =~ ^--?h ]] && udfUsage
+  [[ $1 =~ ^--?h ]] && udfUsage
 
-  for fn in "$@"; do
+  if [[ $* ]]; then
 
-    udfAdd $fn
+    for s in "$@"; do
+      udfAdd "$s"
+    done
 
-  done
+  else
+
+    for s in $(git status -s -- | sed -re "s/^[ AM?][M?].(.*)$/\1/"); do
+
+      [[ $( git status -s $s | grep -P "^[ AM?][M?]\s$*" ) ]] || continue
+      udfAdd "$s"
+
+    done
+
+  fi
 
 }
 #
