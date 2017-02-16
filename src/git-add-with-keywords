@@ -5,7 +5,7 @@
 #
 #
 #
-eval "__aId=( $Id: git-add-with-keywords 20 2017-02-16 17:04:45+04:00 toor $ )"
+eval "__aId=( $Id: git-add-with-keywords 21 2017-02-16 23:30:41+04:00 toor $ )"
 #
 #
 #
@@ -33,7 +33,7 @@ udfUsage() {
   where
   #  -h, --help - show this usage and exit
   #  <files>    - filenames for adding to GIT repository index with $s keyword
-  #               emulation, default used git-status for file search
+  #               emulation, default added only modified ( early added ) files
 
 	EOF
 
@@ -41,22 +41,13 @@ udfUsage() {
 
 }
 #******
-udfAdd() {
+udfGitAddWithId() {
 
-  local fmt fn ic ts ui wcd wd
+  local fmt fn ic=$1 ts ui
 
-  fmt='sed -i -r -e "s/%sId(.*)?%s/%s/" %s'
+  fmt='sed -i -re "s/%sId(.*)?%s/%s/" %s'
 
-  if LC_ALL=C git log 2>&1 | grep '^fatal:.* not have any commits' >/dev/null;
-  then
-
-    ic=0
-
-  else
-
-    ic="$( git shortlog -s | grep -oP '^\s+\d+\s+' | xargs | tr ' ' '+' | bc )"
-
-  fi
+  shift
 
   [[ -d $* ]] && eval $(                                                       \
                                                                                \
@@ -80,12 +71,10 @@ udfAdd() {
 
   fi
 
-  [[ $* == ${*%/*} ]] && wd=. || wd="${*%/*}"
-
-   fn="${*##*/}"
-   ic=$(( ic + 1 ))
-   ts="$( date --rfc-3339=s )"
-   ui="$(_ sUser)"
+  fn="${*##*/}"
+  ic=$(( ic + 1 ))
+  ts="$( date --rfc-3339=s )"
+  ui="$( _ sUser )"
 
   if udfThrowOnEmptyVariable fn ic ts ui; then
 
@@ -94,7 +83,7 @@ udfAdd() {
     eval "$( printf "$fmt" '\\\$' '\\\$' '$s' '$*')" \
       || eval $( udfOnError retwarn "Id not modified.." )
 
-    git add $* && udfDebug 0 "${*}: successfully added to git with Id $ic."
+    git add $* && udfDebug 0 "${*}: successfully added to index with Id $ic."
 
   fi
 
@@ -104,26 +93,44 @@ udfMain() {
 
   udfThrowOnCommandNotFound bc date git grep sed xargs
 
-  local s
+  local i s
 
   eval set -- "$(_ sArg)"
 
   [[ $1 =~ ^--?h ]] && udfUsage
 
+  if LC_ALL=C git log 2>&1 | grep '^fatal:.* not have any commits' >/dev/null;
+  then
+
+    i=0
+
+  else
+
+    i="$( git shortlog -s | grep -oP '^\s+\d+\s+' | xargs | tr ' ' '+' | bc )"
+
+  fi
+
+  udfIsNumber $i || eval $(                                                    \
+                                                                               \
+    udfOnError throw NotNumber "$i - summary of the commits expected"          \
+                                                                               \
+  )
+
   if [[ $* ]]; then
 
     for s in "$@"; do
-      udfAdd "$s"
+
+      udfGitAddWithId $i "$s"
+
     done
 
   else
 
-    for s in $(git status -s -- | sed -re "s/^[ AM?][M?].(.*)$/\1/"); do
+    while read -t 8 s; do
 
-      [[ $( git status -s $s | grep -P "^[ AM?][M?]\s$*" ) ]] || continue
-      udfAdd "$s"
+      [[ $s =~ ^@@ ]] && udfGitAddWithId $i "${s#@@*}"
 
-    done
+    done< <( git status -s $s | sed -re "s/^[ AM][M].(.*)$/@@\1/" )
 
   fi
 
