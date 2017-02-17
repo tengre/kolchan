@@ -1,0 +1,26 @@
+options:
+    --src ./src
+    --doc ./doc/svn2git
+    --html
+    --singledoc
+    --sections
+    --tell
+    --toc
+    --index
+    --charset UTF-8
+    --css ./robodoc.css
+    --syntaxcolors_enable quotes,squotes,line_comments,keywords,non_alpha
+ignore files:
+    .svn
+    *~
+    debian
+    autom4te.cache
+headertypes:
+    F  "Files"              robodoc.header.types 64
+    V  "Versions"           robodoc.header.types 32
+    L  "External libraries" robodoc.header.types 31
+    G  "Global variables"   robodoc.header.types 30
+    e  "external function"  robodoc.header.types 16
+    p  "internal function"  robodoc.header.types 08
+
+

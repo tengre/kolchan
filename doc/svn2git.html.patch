@@ -1,0 +1,12 @@
+--- svn2git.html	2015-06-22 11:03:23.659656179 +0400
++++ svn2git.html.new	2015-06-22 11:02:51.924937406 +0400
+@@ -12,7 +12,9 @@
+ </head>
+ <body>
+ <div id="logo">
++<span style="float:left;">tools for SVN import to GIT</span>
+ <a name="robo_top_of_doc"></a>
++<span style="float:right;">svn2git</span>
+ </div> <!-- logo -->
+ <h3>TABLE OF CONTENTS</h3>
+ <ul>
