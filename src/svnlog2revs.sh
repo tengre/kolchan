@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: svnlog2revs.sh 19 2017-02-08 17:21:51+04:00 toor $
+# $Id: svnlog2revs.sh 23 2017-02-17 14:51:36+04:00 toor $
 #
 . bashlyk
 #

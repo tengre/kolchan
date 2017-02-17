@@ -5,97 +5,110 @@
 #
 #
 #
-eval "__aId=( $Id: git-add-with-keywords 21 2017-02-16 23:30:41+04:00 toor $ )"
+eval "__aId=( $Id: git-add-id 23 2017-02-17 15:26:25+04:00 toor $ )"
 #
 #
 #
 udfUsage() {
 
-  local rc=$? s=$(printf -- '\044Id\044')
+  local rc=$?
 
-  printf -- "\n  %s %s %s, (c) %s\n" \
-            "$(_ s0)"                                                          \
+  printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
+            "${0##*/}"                                                         \
             "rev${__aId[2]}"                                                   \
             "${__aId[3]}"                                                      \
             "2016-$(date +%Y)"
 
-
-#****h* svn2git/git-add-with-keywords
+#****h* svn2git/git-add-id
+	cat <<-EOF | tr -d '#'
 #  DESCRIPTION
-#    git-add-with-keywords - add svn-keyword 'Id' emulation to indexed by GIT
-#    file
+#    emulation keyword "Id" when you add a file to a index of the git repo
+#
+#  USAGE
+#    git-add-id [ -h|--help ] | [<files>]
+#
+#  ARGUMENTS
+#    -h, --help - show this usage and exit
+#    <files>    - files for forced addition to index with updating the "Id"
+#                 The default (no arguments) - add only modified files, which
+#                 are already included in the repo.
+#
+#  USES
+#    bashlyk >= 1.89.689
+#
 #  AUTHOR
 #    Damir Sh. Yakupov <yds@bk.ru>
-#  ARGUMENTS
-	cat <<-EOF | tr -d '#'
-
-  usage: $(_ s0) [ -h|--help ] | [<files>]
-  where
-  #  -h, --help - show this usage and exit
-  #  <files>    - filenames for adding to GIT repository index with $s keyword
-  #               emulation, default added only modified ( early added ) files
-
+#
 	EOF
 
-  eval $( udfOnError exit $rc )
+  exit $rc
 
 }
 #******
+#****f* svn2git/udfGitAddWithId
+#  USAGE
+#    udfGitAddWithId <number> <file>
+#  DESCRIPTION
+#    modify existing in the <file> keyword "Id" with <number> and add this file
+#    to index
+#  ARGUMENTS
+#    <number>        - summary commits number from 'git status -s'
+#    <file>          - target file for updating and indexing
+#  ERRORS
+#    InvalidArgument - <file> is directory
+#  SOURCE
 udfGitAddWithId() {
 
-  local fmt fn ic=$1 ts ui
+  local fmt fn ic ts ui s
 
   fmt='sed -i -re "s/%sId(.*)?%s/%s/" %s'
 
+  ic=$1
   shift
 
-  [[ -d $* ]] && eval $(                                                       \
+  [[ -e "$@" ]] || eval $(                                                     \
                                                                                \
-    udfOnError retwarn InvalidArgument "$* - directories not supported now"    \
+    udfOnError retwarn NoSuchFileOrDir "$@"                                    \
                                                                                \
   )
 
-  if [[ -f "$*" && -n "$( git status -s "$*" | grep -P "^[ AM?][M?]\s$*" )" ]];
-  then
-
-    udfDebug 1 "${*}: git status ok."
-
-  else
-
-    eval $(                                                                    \
+  [[ -d "$@" ]] && eval $(                                                     \
                                                                                \
-      udfOnError retwarn InvalidArgument                                       \
-        "$* is mask, not exist or not modified, but may be indexed..."         \
+    udfOnError retwarn InvalidArgument "$@ - directories not supported now"    \
                                                                                \
-    )
+  )
 
-  fi
-
-  fn="${*##*/}"
+  fn="${@##*/}"
   ic=$(( ic + 1 ))
   ts="$( date --rfc-3339=s )"
   ui="$( _ sUser )"
 
-  if udfThrowOnEmptyVariable fn ic ts ui; then
+  udfThrowOnEmptyVariable fn ic ts ui
 
-    s="$( printf '\044Id: %s %d %s %s \044\n' "$fn" "$ic" "$ts" "$ui" )"
+  s="$( printf '\044Id: %s %d %s %s \044\n' "$fn" "$ic" "$ts" "$ui" )"
 
-    eval "$( printf "$fmt" '\\\$' '\\\$' '$s' '$*')" \
-      || eval $( udfOnError retwarn "Id not modified.." )
+  if ! eval "$( printf "$fmt" '\\\$' '\\\$' '$s' '"$@"')"; then
 
-    git add $* && udfDebug 0 "${*}: successfully added to index with Id $ic."
+    eval $(
+
+      udfOnError warn "$@ - keyword $(printf '\044Id\044') not modified.."
+
+    )
 
   fi
 
+  git add "$@" && s="added to index " || s="indexing failed"
+  udfDebug 0 "${s} .. \"${@}\""
+
 }
-#
+#******
 udfMain() {
 
   udfThrowOnCommandNotFound bc date git grep sed xargs
 
   local i s
 
-  eval set -- "$(_ sArg)"
+  eval set -- "$( _ sArg )"
 
   [[ $1 =~ ^--?h ]] && udfUsage
 
@@ -116,7 +129,9 @@ udfMain() {
                                                                                \
   )
 
-  if [[ $* ]]; then
+  udfDebug 0 "try add to index with $(printf -- '\044Id\044') ${i}:"
+
+  if [[ $@ ]]; then
 
     for s in "$@"; do
 
@@ -128,7 +143,15 @@ udfMain() {
 
     while read -t 8 s; do
 
-      [[ $s =~ ^@@ ]] && udfGitAddWithId $i "${s#@@*}"
+      if   [[ $s =~ ^@@ ]]; then
+
+        udfGitAddWithId $i "${s#@@*}"
+
+      elif [[ $s =~ ^M[^M][[:space:]](.*)$ ]]; then
+
+        udfDebug 0 "already indexed .. \"${BASH_REMATCH[1]}\""
+
+      fi
 
     done< <( git status -s $s | sed -re "s/^[ AM][M].(.*)$/@@\1/" )
 

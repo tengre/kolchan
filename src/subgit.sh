@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: subgit.sh 20 2017-02-16 16:50:18+04:00 toor $
+# $Id: subgit.sh 23 2017-02-17 14:51:36+04:00 toor $
 #
 . bashlyk
 #
