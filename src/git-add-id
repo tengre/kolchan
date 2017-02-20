@@ -5,7 +5,7 @@
 #
 #
 #
-eval "__aId=( $Id: git-add-id 23 2017-02-17 15:26:25+04:00 toor $ )"
+eval "__aId=( $Id: git-add-id 25 2017-02-20 17:27:32+04:00 toor $ )"
 #
 #
 #
@@ -63,6 +63,8 @@ udfGitAddWithId() {
 
   fmt='sed -i -re "s/%sId(.*)?%s/%s/" %s'
 
+  : ${bIndexed:=0}
+
   ic=$1
   shift
 
@@ -79,7 +81,6 @@ udfGitAddWithId() {
   )
 
   fn="${@##*/}"
-  ic=$(( ic + 1 ))
   ts="$( date --rfc-3339=s )"
   ui="$( _ sUser )"
 
@@ -97,7 +98,18 @@ udfGitAddWithId() {
 
   fi
 
-  git add "$@" && s="added to index " || s="indexing failed"
+  if git add "$@"; then
+
+    s="added to index "
+    bIndexed=$(( bIndexed +1 ))
+    tsIndexed=$ts
+
+  else
+
+    s="indexing failed"
+
+  fi
+
   udfDebug 0 "${s} .. \"${@}\""
 
 }
@@ -106,11 +118,13 @@ udfMain() {
 
   udfThrowOnCommandNotFound bc date git grep sed xargs
 
-  local i s
+  local bIndexed i tsIndexed s
 
   eval set -- "$( _ sArg )"
 
   [[ $1 =~ ^--?h ]] && udfUsage
+
+  tsIndexed="$( git log -1 --pretty=format:"%ci" 2>/dev/null | cut -f1 -d' ' )"
 
   if LC_ALL=C git log 2>&1 | grep '^fatal:.* not have any commits' >/dev/null;
   then
@@ -128,6 +142,8 @@ udfMain() {
     udfOnError throw NotNumber "$i - summary of the commits expected"          \
                                                                                \
   )
+
+  i=$(( i+1 ))
 
   udfDebug 0 "try add to index with $(printf -- '\044Id\044') ${i}:"
 
@@ -154,6 +170,14 @@ udfMain() {
       fi
 
     done< <( git status -s $s | sed -re "s/^[ AM][M].(.*)$/@@\1/" )
+
+  fi
+
+  if [[ -f ChangeLog ]]; then
+
+    (( bIndexed == 0 )) && i=$(( i - 1 ))
+
+    printf -- "%d %s\n" "$i" "$tsIndexed" > revision
 
   fi
 
