@@ -5,7 +5,7 @@
 #
 #
 #
-eval "__aId=( $Id: git-add-id 25 2017-02-20 17:27:32+04:00 toor $ )"
+eval "__aId=( $Id: git-add-id 26 2017-02-21 10:01:16+04:00 toor $ )"
 #
 #
 #
@@ -177,7 +177,12 @@ udfMain() {
 
     (( bIndexed == 0 )) && i=$(( i - 1 ))
 
-    printf -- "%d %s\n" "$i" "$tsIndexed" > revision
+    printf -- "%s %d %s\n"                                                     \
+              "$(                                                              \
+                  sed -n "3p" ChangeLog |                                      \
+                    sed -e "s/[[:space:]]*Version[[:space:]]*//i"              \
+              )"                                                               \
+              "$i" "$tsIndexed" > VERSION
 
   fi
 
