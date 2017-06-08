@@ -1,35 +1,35 @@
 #!/bin/bash
 #
-# $Id: svnsetlog.sh 23 2017-02-17 14:51:36+04:00 toor $
+# $Id: svnsetlog.sh 28 2017-06-08 15:19:59+04:00 toor $
 #
-. bashlyk
+_bashlyk=developing . bashlyk
 #
 #
 #
 
 : ${pathSVN:=/opt/dat/svn}
 
-udfMain() {
+svnsetlog::main() {
 
-  udfThrowOnCommandNotFound ls svnadmin
+  throw on CommandNotFound ls svnadmin
 
   eval set -- "$(_ sArg)"
 
   local r
 
-  udfOn MissingArgument throw $1
-  udfOn NoSuchFileOrDir throw "${pathSVN}/$1"
+  throw on MissingArgument $1
+  throw on NoSuchFileOrDir "${pathSVN}/$1"
 
-  for r in $(ls -rt r*); do
+  while read r; do
 
     echo "$1 - setlog $r"
     svnadmin setlog ${pathSVN}/$1 -r ${r/r/} --bypass-hooks $r
 
-  done
+  done< <( ls -rt r* )
 
 }
 #
 #
 #
-udfMain
+svnsetlog::main
 #
