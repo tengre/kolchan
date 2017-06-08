@@ -1,15 +1,15 @@
 #!/bin/bash
 #
 #
-. bashlyk
+_bashlyk=developing . bashlyk
 #
 #
 #
-eval "__aId=( $Id: git-add-id 26 2017-02-21 10:01:16+04:00 toor $ )"
+eval "__aId=( $Id: git-add-id 27 2017-06-08 14:44:57+04:00 toor $ )"
 #
 #
 #
-udfUsage() {
+git::usage() {
 
   local rc=$?
 
@@ -34,7 +34,7 @@ udfUsage() {
 #                 are already included in the repo.
 #
 #  USES
-#    bashlyk >= 1.89.689
+#    bashlyk >= 1.91.777
 #
 #  AUTHOR
 #    Damir Sh. Yakupov <yds@bk.ru>
@@ -45,9 +45,9 @@ udfUsage() {
 
 }
 #******
-#****f* svn2git/udfGitAddWithId
+#****f* svn2git/git::add
 #  USAGE
-#    udfGitAddWithId <number> <file>
+#    git::add <number> <file>
 #  DESCRIPTION
 #    modify existing in the <file> keyword "Id" with <number> and add this file
 #    to index
@@ -57,7 +57,7 @@ udfUsage() {
 #  ERRORS
 #    InvalidArgument - <file> is directory
 #  SOURCE
-udfGitAddWithId() {
+git::add() {
 
   local fmt fn ic ts ui s
 
@@ -68,33 +68,21 @@ udfGitAddWithId() {
   ic=$1
   shift
 
-  [[ -e "$@" ]] || eval $(                                                     \
-                                                                               \
-    udfOnError retwarn NoSuchFileOrDir "$@"                                    \
-                                                                               \
-  )
+  errorify+warn on NoSuchFileOrDir "$@"
 
-  [[ -d "$@" ]] && eval $(                                                     \
-                                                                               \
-    udfOnError retwarn InvalidArgument "$@ - directories not supported now"    \
-                                                                               \
-  )
+  [[ -d "$@" ]] && on error warn+return InvalidArgument "$@ - file expected.."
 
   fn="${@##*/}"
   ts="$( date --rfc-3339=s )"
   ui="$( _ sUser )"
 
-  udfThrowOnEmptyVariable fn ic ts ui
+  throw on EmptyVariable fn ic ts ui
 
   s="$( printf '\044Id: %s %d %s %s \044\n' "$fn" "$ic" "$ts" "$ui" )"
 
   if ! eval "$( printf "$fmt" '\\\$' '\\\$' '$s' '"$@"')"; then
 
-    eval $(
-
-      udfOnError warn "$@ - keyword $(printf '\044Id\044') not modified.."
-
-    )
+    on error warn "$@ - keyword $(printf '\044Id\044') not modified.."
 
   fi
 
@@ -110,19 +98,19 @@ udfGitAddWithId() {
 
   fi
 
-  udfDebug 0 "${s} .. \"${@}\""
+  err::debug 0 "${s} .. \"${@}\""
 
 }
 #******
-udfMain() {
+git::main() {
 
-  udfThrowOnCommandNotFound bc date git grep sed xargs
+  throw on CommandNotFound bc date git grep sed xargs
 
   local bIndexed i tsIndexed s
 
   eval set -- "$( _ sArg )"
 
-  [[ $1 =~ ^--?h ]] && udfUsage
+  [[ $1 =~ ^--?h ]] && git::usage
 
   tsIndexed="$( git log -1 --pretty=format:"%ci" 2>/dev/null | cut -f1 -d' ' )"
 
@@ -137,21 +125,17 @@ udfMain() {
 
   fi
 
-  udfIsNumber $i || eval $(                                                    \
-                                                                               \
-    udfOnError throw NotNumber "$i - summary of the commits expected"          \
-                                                                               \
-  )
+  std::isNumber $i || on error throw NotNumber "$i - summary of the commits expected"
 
   i=$(( i+1 ))
 
-  udfDebug 0 "try add to index with $(printf -- '\044Id\044') ${i}:"
+  err::debug 0 "try add to index with $( printf -- '\044Id\044' ) ${i}:"
 
   if [[ $@ ]]; then
 
     for s in "$@"; do
 
-      udfGitAddWithId $i "$s"
+      git::add $i "$s"
 
     done
 
@@ -161,11 +145,11 @@ udfMain() {
 
       if   [[ $s =~ ^@@ ]]; then
 
-        udfGitAddWithId $i "${s#@@*}"
+        git::add $i "${s#@@*}"
 
       elif [[ $s =~ ^M[^M][[:space:]](.*)$ ]]; then
 
-        udfDebug 0 "already indexed .. \"${BASH_REMATCH[1]}\""
+        err::debug 0 "already indexed .. \"${BASH_REMATCH[1]}\""
 
       fi
 
@@ -190,5 +174,5 @@ udfMain() {
 #
 #
 #
-udfMain
+git::main
 #
