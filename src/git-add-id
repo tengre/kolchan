@@ -5,7 +5,7 @@ _bashlyk=developing . bashlyk
 #
 #
 #
-eval "__aId=( $Id: git-add-id 27 2017-06-08 14:44:57+04:00 toor $ )"
+eval "__aId=( $Id: git-add-id 29 2018-06-18 15:31:00+04:00 toor $ )"
 #
 #
 #
@@ -70,7 +70,7 @@ git::add() {
 
   errorify+warn on NoSuchFileOrDir "$@"
 
-  [[ -d "$@" ]] && on error warn+return InvalidArgument "$@ - file expected.."
+  [[ -d "$@" ]] && error InvalidArgument warn+return "$@ - file expected.."
 
   fn="${@##*/}"
   ts="$( date --rfc-3339=s )"
@@ -82,7 +82,7 @@ git::add() {
 
   if ! eval "$( printf "$fmt" '\\\$' '\\\$' '$s' '"$@"')"; then
 
-    on error warn "$@ - keyword $(printf '\044Id\044') not modified.."
+    error warn "$@ - keyword $(printf '\044Id\044') not modified.."
 
   fi
 
@@ -125,7 +125,7 @@ git::main() {
 
   fi
 
-  std::isNumber $i || on error throw NotNumber "$i - summary of the commits expected"
+  std::isNumber $i || error NotNumber throw "$i - summary of the commits expected"
 
   i=$(( i+1 ))
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: svnlog2revs.sh 28 2017-06-08 15:19:59+04:00 toor $
+# $Id: svnlog2revs.sh 29 2018-06-18 15:31:00+04:00 toor $
 #
 _bashlyk=developing . bashlyk
 #
@@ -42,7 +42,7 @@ svnlog2revs::main() {
 
       else
 
-        on error throw Unexpected "$s"
+        error Unexpected throw "$s"
 
       fi
 
