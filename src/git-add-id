@@ -5,7 +5,7 @@ _bashlyk=developing . bashlyk
 #
 #
 #
-eval "__aId=( $Id: git-add-id 29 2018-06-18 15:31:00+04:00 toor $ )"
+eval "__aId=( $Id: git-add-id 30 2018-07-10 19:55:06+04:00 toor $ )"
 #
 #
 #
@@ -111,6 +111,15 @@ git::main() {
   eval set -- "$( _ sArg )"
 
   [[ $1 =~ ^--?h ]] && git::usage
+
+  git status >/dev/null 2>&1
+  
+  if (( $? == 128 )); then
+
+    err::debugf 0 "\n  [!]Warn: git repository (or any of the parent directories): .git not found..\n  show usage by --help option..\n"
+    return 128
+
+  fi
 
   tsIndexed="$( git log -1 --pretty=format:"%ci" 2>/dev/null | cut -f1 -d' ' )"
 
