@@ -1,11 +1,11 @@
 #!/bin/bash
 #
 #
-_bashlyk=developing . bashlyk
+_bashlyk=svn2git . bashlyk
 #
 #
 #
-eval "__aId=( $Id: git-add-id 31 2018-07-10 20:14:29+04:00 toor $ )"
+eval "__aId=( $Id: git-add-id 32 2018-07-11 18:25:09+04:00 toor $ )"
 #
 #
 #
@@ -22,19 +22,19 @@ git::usage() {
 #****h* svn2git/git-add-id
 	cat <<-EOF | tr -d '#'
 #  DESCRIPTION
-#    emulation keyword "Id" when you add a file to a index of the git repo
+#    emulation keyword "Id" when you add a file to a index of the git repository
 #
 #  USAGE
 #    git-add-id [ -h|--help ] | [<files>]
 #
 #  ARGUMENTS
 #    -h, --help - show this usage and exit
-#    <files>    - files for forced addition to index with updating the "Id"
+#    <files>    - files for forced addition to the index with updating the "Id"
 #                 The default (no arguments) - add only modified files, which
-#                 are already included in the repo.
+#                 are already included to the git repository.
 #
 #  USES
-#    bashlyk >= 1.91.777
+#    bashlyk >= 1.93
 #
 #  AUTHOR
 #    Damir Sh. Yakupov <yds@bk.ru>
@@ -50,11 +50,12 @@ git::usage() {
 #    git::add <number> <file>
 #  DESCRIPTION
 #    modify existing in the <file> keyword "Id" with <number> and add this file
-#    to index
+#    to the index
 #  ARGUMENTS
 #    <number>        - summary commits number from 'git status -s'
 #    <file>          - target file for updating and indexing
 #  ERRORS
+#    NoSuchFileOrDir - <file> not found
 #    InvalidArgument - <file> is directory
 #  SOURCE
 git::add() {
@@ -68,8 +69,7 @@ git::add() {
   ic=$1
   shift
 
-  errorify+warn on NoSuchFileOrDir "$@" || return
-
+  [[ -f "$@" ]] || error NoSuchFileOrDir warn+return "$@"
   [[ -d "$@" ]] && error InvalidArgument warn+return "$@ - file expected.."
 
   fn="${@##*/}"
