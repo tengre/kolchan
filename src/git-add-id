@@ -5,7 +5,7 @@ _bashlyk=svn2git . bashlyk
 #
 #
 #
-eval "__aId=( $Id: git-add-id 32 2018-07-11 18:25:09+04:00 toor $ )"
+eval "__aId=( $Id: git-add-id 33 2018-07-13 00:51:57+04:00 toor $ )"
 #
 #
 #
@@ -22,7 +22,10 @@ git::usage() {
 #****h* svn2git/git-add-id
 	cat <<-EOF | tr -d '#'
 #  DESCRIPTION
-#    emulation keyword "Id" when you add a file to a index of the git repository
+#    Wrapper for 'git add' to emulate the keyword '$(printf '\044Id\044')'.
+#    The text file is added to the git index after trying to update the line 
+#    with the keyword '$(printf '\044Id\044')'. The current number of the commit is the total 
+#    number of previously committed commits +1
 #
 #  USAGE
 #    git-add-id [ -h|--help ] | [<files>]
@@ -39,6 +42,16 @@ git::usage() {
 #  AUTHOR
 #    Damir Sh. Yakupov <yds@bk.ru>
 #
+#  EXAMPLE
+#    git init
+#    ...
+#    echo '$(printf '\044Id\044')' > git-add-id.txt
+#    git-add-id git-add-id.txt 
+#    output: try add to index with $(printf '\044Id\044') 1:
+#    output: added to index  .. "git-add-id.txt"
+#    cat git-add-id.txt 
+#    output: : $(printf '\044Id') git-add-id 1 2018-07-12 23:32:37+01:00 user $(printf '\044')
+#  
 	EOF
 
   exit $rc
