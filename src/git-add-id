@@ -5,7 +5,7 @@ _bashlyk=svn2git . bashlyk
 #
 #
 #
-eval "__aId=( $Id: git-add-id 33 2018-07-13 00:51:57+04:00 toor $ )"
+eval "__aId=( $Id: git-add-id 34 2018-07-13 16:45:42+04:00 toor $ )"
 #
 #
 #
@@ -50,8 +50,8 @@ git::usage() {
 #    output: try add to index with $(printf '\044Id\044') 1:
 #    output: added to index  .. "git-add-id.txt"
 #    cat git-add-id.txt 
-#    output: : $(printf '\044Id') git-add-id 1 2018-07-12 23:32:37+01:00 user $(printf '\044')
-#  
+#    output: : $(printf '\044Id') git-add-id.txt 1 2018-07-12 23:32:37+01:00 user $(printf '\044')
+#
 	EOF
 
   exit $rc
