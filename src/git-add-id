@@ -5,7 +5,7 @@ _bashlyk=svn2git . bashlyk
 #
 #
 #
-eval "__aId=( $Id: git-add-id 35 2018-07-16 00:27:37+04:00 toor $ )"
+eval "__aId=( $Id: git-add-id 36 2018-07-16 00:55:37+04:00 yds $ )"
 #
 #
 #
@@ -87,7 +87,8 @@ git::add() {
 
   fn="${@##*/}"
   ts="$( date --rfc-3339=s )"
-  ui="$( _ sUser )"
+  ui="$( git config --get user.id )"
+  [[ $ui ]] || ui="$( _ sUser )"
 
   throw on EmptyVariable fn ic ts ui
 
