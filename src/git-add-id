@@ -5,7 +5,7 @@ _bashlyk=svn2git . bashlyk
 #
 #
 #
-eval "__aId=( $Id: git-add-id 37 2018-07-16 18:24:06+04:00 yds $ )"
+eval "__aId=( $Id: git-add-id 38 2018-07-16 18:34:27+04:00 yds $ )"
 #
 #
 #
@@ -53,7 +53,7 @@ git::usage() {
 #    output: try add to index with Revision 1:
 #    output: added to index  .. "git-add-id.txt"
 #    cat git-add-id.txt 
-#    output: $(printf '\044Id') git-add-id.txt 1 $( date --rfc-3339=s ) user $(printf '\044')
+#    output: $(printf '\044Id') git-add-id.txt 1 $( date --rfc-3339=s ) $( id -nu ) $(printf '\044')
 #
 	EOF
 
@@ -121,7 +121,7 @@ git::add() {
 #******
 git::main() {
 
-  throw on CommandNotFound bc date git grep sed xargs
+  throw on CommandNotFound bc date git grep id sed xargs
 
   local bIndexed i tsIndexed s
 
