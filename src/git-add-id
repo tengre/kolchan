@@ -5,7 +5,7 @@ _bashlyk=svn2git . bashlyk
 #
 #
 #
-eval "__aId=( $Id: git-add-id 36 2018-07-16 00:55:37+04:00 yds $ )"
+eval "__aId=( $Id: git-add-id 37 2018-07-16 18:24:06+04:00 yds $ )"
 #
 #
 #
@@ -22,11 +22,14 @@ git::usage() {
 #****h* svn2git/git-add-id
 	cat <<-EOF | tr -d '#'
 #  DESCRIPTION
-#    Easy way to emulate SVN keywords. Currently, the compound keyword "Id" is
+#    Easy way to emulate SVN keywords. Currently, the compound keyword "Id" 
 #    supported only.
-#    The current revision number is the total number of completed commits plus 
-#    one as the expected next commit. The keyword value is updated before 
-#    adding to the GIT index.
+#    - The revision number "Rev" is the total number of completed commits plus 
+#    one as the expected next commit. 
+#    - The keyword "Author" is a classical username ( id -nu ). May be 
+#    overloaded by special option "user.id" of the git config, but like single 
+#    word only.
+#    - The keyword "Id" value is updated before adding to the GIT index.
 #
 #  USAGE
 #    git-add-id [ -h|--help ] | [<files>]
@@ -47,10 +50,10 @@ git::usage() {
 #    git init
 #    echo '$(printf '\044Id\044')' > git-add-id.txt
 #    git-add-id git-add-id.txt 
-#    output: try add to index with $(printf '\044Id\044') 1:
+#    output: try add to index with Revision 1:
 #    output: added to index  .. "git-add-id.txt"
 #    cat git-add-id.txt 
-#    output: : $(printf '\044Id') git-add-id.txt 1 $( date --rfc-3339=s ) user $(printf '\044')
+#    output: $(printf '\044Id') git-add-id.txt 1 $( date --rfc-3339=s ) user $(printf '\044')
 #
 	EOF
 
@@ -88,7 +91,7 @@ git::add() {
   fn="${@##*/}"
   ts="$( date --rfc-3339=s )"
   ui="$( git config --get user.id )"
-  [[ $ui ]] || ui="$( _ sUser )"
+  [[ $ui && ! $ui =~ [[:space:]] ]] || ui="$( _ sUser )"
 
   throw on EmptyVariable fn ic ts ui
 
@@ -152,7 +155,7 @@ git::main() {
 
   i=$(( i+1 ))
 
-  err::debug 0 "try add to index with $( printf -- '\044Id\044' ) ${i}:"
+  err::debug 0 "try add to index with Revision ${i}:"
 
   if [[ $@ ]]; then
 
