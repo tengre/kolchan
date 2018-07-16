@@ -5,7 +5,7 @@ _bashlyk=svn2git . bashlyk
 #
 #
 #
-eval "__aId=( $Id: git-add-id 38 2018-07-16 18:34:27+04:00 yds $ )"
+eval "__aId=( $Id: git-add-id 39 2018-07-17 00:57:55+04:00 yds $ )"
 #
 #
 #
@@ -24,19 +24,20 @@ git::usage() {
 #  DESCRIPTION
 #    Easy way to emulate SVN keywords. Currently, the compound keyword "Id" 
 #    supported only.
-#    - The revision number "Rev" is the total number of completed commits plus 
-#    one as the expected next commit. 
-#    - The keyword "Author" is a classical username ( id -nu ). May be 
+#    - The revision number (aka "Rev") is the total number of completed commits
+#    plus one as the expected next commit. 
+#    - The "Author" part of the "Id" is a classical username `id -nu`. May be 
 #    overloaded by special option "user.id" of the git config, but like single 
 #    word only.
 #    - The keyword "Id" value is updated before adding to the GIT index.
 #
 #  USAGE
-#    git-add-id [ -h|--help ] | [<files>]
+#    git-add-id [ -h|--help ] | [<files> ...]
 #
 #  ARGUMENTS
 #    -h, --help - show this usage and exit
-#    <files>    - files for forced addition to the index with updating the "Id"
+#    <files>    - files for forced addition to the git index with updating the 
+#                 keyword "Id" (if needed)
 #                 The default (no arguments) - added only modified files, which
 #                 are already included to the git repository.
 #
@@ -63,12 +64,12 @@ git::usage() {
 #******
 #****f* svn2git/git::add
 #  USAGE
-#    git::add <number> <file>
+#    git::add <revision> <file>
 #  DESCRIPTION
-#    modify existing in the <file> keyword "Id" with <number> and add this file
-#    to the index
+#    modify existing in the <file> keyword "Id" with <revision> and add this 
+#    file to the git index
 #  ARGUMENTS
-#    <number>        - summary commits number from 'git status -s'
+#    <revision>      - usually summary commits number from 'git status -s'
 #    <file>          - target file for updating and indexing
 #  ERRORS
 #    NoSuchFileOrDir - <file> not found
