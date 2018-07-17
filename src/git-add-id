@@ -5,7 +5,7 @@ _bashlyk=svn2git . bashlyk
 #
 #
 #
-eval "__aId=( $Id: git-add-id 39 2018-07-17 00:57:55+04:00 yds $ )"
+eval "__aId=( $Id: git-add-id 40 2018-07-17 12:53:02+04:00 yds $ )"
 #
 #
 #
@@ -22,31 +22,24 @@ git::usage() {
 #****h* svn2git/git-add-id
 	cat <<-EOF | tr -d '#'
 #  DESCRIPTION
-#    Easy way to emulate SVN keywords. Currently, the compound keyword "Id" 
-#    supported only.
-#    - The revision number (aka "Rev") is the total number of completed commits
-#    plus one as the expected next commit. 
-#    - The "Author" part of the "Id" is a classical username `id -nu`. May be 
-#    overloaded by special option "user.id" of the git config, but like single 
-#    word only.
-#    - The keyword "Id" value is updated before adding to the GIT index.
-#
+#    Easy way to emulate SVN keywords. Currently, compound keyword "Id"  handled
+#    only. Revision number (aka "Rev")  is  a  total number of completed commits
+#    plus one as the expected next commit. "Author" part of the "Id" is a system
+#    name of the current user (id -nu ). May be  overloaded  by  special  option
+#    "user.id" from git config, but like single word only. Keyword "Id" value is
+#    updated before adding to the git index.
 #  USAGE
 #    git-add-id [ -h|--help ] | [<files> ...]
-#
 #  ARGUMENTS
 #    -h, --help - show this usage and exit
 #    <files>    - files for forced addition to the git index with updating the 
 #                 keyword "Id" (if needed)
 #                 The default (no arguments) - added only modified files, which
 #                 are already included to the git repository.
-#
 #  USES
 #    bashlyk >= 1.93
-#
 #  AUTHOR
 #    Damir Sh. Yakupov <yds@bk.ru>
-#
 #  EXAMPLE
 #    git init
 #    echo '$(printf '\044Id\044')' > git-add-id.txt
@@ -55,7 +48,6 @@ git::usage() {
 #    output: added to index  .. "git-add-id.txt"
 #    cat git-add-id.txt 
 #    output: $(printf '\044Id') git-add-id.txt 1 $( date --rfc-3339=s ) $( id -nu ) $(printf '\044')
-#
 	EOF
 
   exit $rc
