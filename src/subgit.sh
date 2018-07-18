@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: subgit.sh 41 2018-07-18 23:46:02+04:00 yds $
+# $Id: subgit.sh 42 2018-07-19 00:24:40+04:00 yds $
 #
 _bashlyk=svn2git . bashlyk
 #
@@ -17,7 +17,7 @@ subgit::main() {
   
   cfg.bind.cli authors{a}:-- config{c}: help{h} git{g}: project{p}: svn{s}:
   
-  cfg.storage $( cfg.getopt config )
+  cfg.storage.use $( cfg.getopt config )
   
   cfg.load []git,project,svn [authors]=
   
