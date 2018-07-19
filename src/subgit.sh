@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: subgit.sh 42 2018-07-19 00:24:40+04:00 yds $
+# $Id: subgit.sh 43 2018-07-19 22:45:28+04:00 yds $
 #
 _bashlyk=svn2git . bashlyk
 #
@@ -25,9 +25,9 @@ subgit::main() {
   pathSVN=$( cfg.get svn ) 
   project=$( cfg.get project ) 
 
-  s=$( ini.get [authors] )
+  s=$( cfg.get [authors] )
   eval "${s/declare -a a/declare -a aAuthors}"
-
+  
   cfg.free
   
   : ${pathGIT:=opt/dat/git}
