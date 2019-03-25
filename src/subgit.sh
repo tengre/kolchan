@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# $Id: subgit.sh 43 2018-07-19 22:45:28+04:00 yds $
+# $Id: subgit.sh 44 2019-03-25 22:56:00+04:00 yds $
 #
-_bashlyk=svn2git . bashlyk
+_bashlyk=devtools . bashlyk
 #
 #
 #

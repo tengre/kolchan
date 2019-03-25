@@ -1,3 +1,27 @@
-Fri, 17 Feb 2017 15:11:57 +0400
-        Initial release
+Mon, 16 Jul 2018 18:24:41 +0400
+	New upstream release
+        Version 0.4
+- git-add-id - added 'user.id' value from git config:
+  first try use "user.id" value from git config, if is empty use $USER value
+
+
+Fri, 17 Feb 2017 15:36:19 +0400
+	New upstream release
+        Version 0.3
+- git-add-with-keywords renamed to git-add-id
+- added autotools and robodoc configuration files
+
+
+Thu, 23 Jun 2016 14:15:53 +0400
+	New upstream release
+        Version 0.2
+- added git-add-with-keywords (early gitadd.sh) - wrapper for emulation 
+  svn-keyword 'Id' by using calculating total count of commits from stdout of
+  'git shortlog -s'
+- revision number (count of commits) incremented anticipating the expected commit
+
+
+Mon, 20 Jun 2016 17:19:32 +0400
+	Initial release
         Version 0.1
+- added scripts to convert svn to git: subgit.sh, svnlog2rev.sh, svnsetlog.sh

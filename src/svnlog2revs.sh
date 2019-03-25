@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# $Id: svnlog2revs.sh 29 2018-06-18 15:31:00+04:00 toor $
+# $Id: svnlog2revs.sh 44 2019-03-25 22:56:00+04:00 yds $
 #
-_bashlyk=developing . bashlyk
+_bashlyk=devtools . bashlyk
 #
 #
 #

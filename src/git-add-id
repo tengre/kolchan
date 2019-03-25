@@ -1,11 +1,11 @@
 #!/bin/bash
 #
 #
-_bashlyk=svn2git . bashlyk
+_bashlyk=devtools . bashlyk
 #
 #
 #
-eval "__aId=( $Id: git-add-id 40 2018-07-17 12:53:02+04:00 yds $ )"
+eval "__aId=( $Id: git-add-id 44 2019-03-25 22:56:00+04:00 yds $ )"
 #
 #
 #
