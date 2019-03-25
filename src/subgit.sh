@@ -1,30 +1,61 @@
 #!/bin/bash
 #
-# $Id: subgit.sh 27 2017-06-08 14:44:57+04:00 toor $
+# $Id: subgit.sh 44 2019-03-25 22:56:00+04:00 yds $
 #
-_bashlyk=developing . bashlyk
+_bashlyk=devtools . bashlyk
 #
 #
 #
-: ${pathSVN:=/opt/dat/svn}
-: ${pathGIT:=/opt/dat/git}
-: ${fnAuthors:=~/src/authors}
-
 subgit::main() {
 
-  eval set -- "$( _ sArg )"
-
-  throw on MissingArgument $1
   throw on CommandNotFound subgit
+  
+  local pathGIT pathSVN project
+  local -a aAuthors
+  
+  CFG cfg
+  
+  cfg.bind.cli authors{a}:-- config{c}: help{h} git{g}: project{p}: svn{s}:
+  
+  cfg.storage.use $( cfg.getopt config )
+  
+  cfg.load []git,project,svn [authors]=
+  
+  pathGIT=$( cfg.get git ) 
+  pathSVN=$( cfg.get svn ) 
+  project=$( cfg.get project ) 
 
-  pathSVN+="/${1}"
-  pathGIT+="/${1}.git"
+  s=$( cfg.get [authors] )
+  eval "${s/declare -a a/declare -a aAuthors}"
+  
+  cfg.free
+  
+  : ${pathGIT:=opt/dat/git}
+  : ${pathSVN:=opt/dat/svn}
 
-  throw on NoSuchFileOrDir $pathGIT $pathSVN $fnAuthors
+  if [[ $project ]]; then
+  
+    pathGIT+="/${project}.git"
+    pathSVN+="/${project}"
+  
+  fi
+
+  throw on NoSuchFileOrDir $pathSVN
+  
+  #
+  # prepare authors substitution
+  #
+  std::temp fnAuthors 
+  for s in "${aAuthors[@]}"; do
+  
+    echo "$s" >> $fnAuthors
+  
+  done
+  [[ -s $fnAuthors ]] && fnAuthors="--authors-file $fnAuthors" || fnAuthors=
 
   ## TODO use svn(admin) and git tools for checking repos validity
 
-  subgit import --authors-file $fnAuthors --svn-url file://$pathSVN $pathGIT
+  subgit import $fnAuthors --svn-url file://${pathSVN} $pathGIT
 
 }
 #

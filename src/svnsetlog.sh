@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# $Id: svnsetlog.sh 28 2017-06-08 15:19:59+04:00 toor $
+# $Id: svnsetlog.sh 44 2019-03-25 22:56:00+04:00 yds $
 #
-_bashlyk=developing . bashlyk
+_bashlyk=devtools . bashlyk
 #
 #
 #
