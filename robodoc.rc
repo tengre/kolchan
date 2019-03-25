@@ -1,6 +1,6 @@
 options:
     --src ./src
-    --doc ./doc/svn2git
+    --doc ./doc/kolchan
     --html
     --singledoc
     --sections

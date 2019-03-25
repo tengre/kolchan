@@ -1,0 +1,126 @@
+#!/bin/bash
+#
+# $Id: uupdeb 47 2019-03-25 23:40:02+04:00 yds $
+#
+_bashlyk=buildpackage . bashlyk
+#
+#
+#
+ _rsync_hError[0]="Success"
+ _rsync_hError[1]="Syntax or usage error"
+ _rsync_hError[2]="Protocol incompatibility"
+ _rsync_hError[3]="Errors selecting input/output files, dirs"
+ _rsync_hError[4]="Requested action not supported: an attempt was made to manipulate 64-bit files on a platform that cannot support them; or an option was specified that is supported by the client and not by the server."
+ _rsync_hError[5]="Error starting client-server protocol"
+ _rsync_hError[6]="Daemon unable to append to log-file"
+_rsync_hError[10]="Error in socket I/O"
+_rsync_hError[11]="Error in file I/O"
+_rsync_hError[12]="Error in rsync protocol data stream"
+_rsync_hError[13]="Errors with program diagnostics"
+_rsync_hError[14]="Error in IPC code"
+_rsync_hError[20]="Received SIGUSR1 or SIGINT"
+_rsync_hError[21]="Some error returned by waitpid()"
+_rsync_hError[22]="Error allocating core memory buffers"
+_rsync_hError[23]="Partial transfer due to error"
+_rsync_hError[24]="Partial transfer due to vanished source files"
+_rsync_hError[25]="The --max-delete limit stopped deletions"
+_rsync_hError[30]="Timeout in data send/receive"
+_rsync_hError[35]="Timeout waiting for daemon connection"
+#
+#
+#
+updeb::main() {
+
+  throw on CommandNotFound bc git grep head mv pwd rsync uupdate tail tar tr wc xargs
+
+  eval set -- "$( _ sArg )"
+
+  throw on MissingArgument $1
+
+  local -a a
+  local _1="$1" fn i path=~/builds s v
+
+  mkdir -p $path && cd $path || error NotExistAndNotCreated throw $path
+
+  [[ -d ${path}/${1} ]] || error NoSuchFileOrDir throw ${path}/${_1}
+
+  [[ ${1%-*} != $1 ]] || error InvalidArgument throw "$_1 - expected x-y form"
+
+  s=${1%-*}
+
+  err::debug 0 "source $s"
+
+  [[ -d ~/src/$s ]] && cd ~/src/$s || error NoSuchFileOrDir throw ~/src/$s
+
+  if ! LC_ALL=C git log 2>&1 | grep '^fatal:.* not have any commits' >/dev/null
+  then
+
+    i=$( git shortlog -s | grep -oP '^\s+\d+\s+' | xargs | tr ' ' '+' | bc )
+
+  fi
+
+  [[ -s VERSION ]] || error NoSuchFileOrDir throw ~/src/VERSION
+
+  a=( $( < VERSION ) )
+
+  [[ ${a[0]} =~ [0-9]+.*[0-9]+ ]] || error InvalidArgument throw "${a[0]}"
+
+  cd $path || error NotPermitted throw $path
+
+  std::isNumber $i && i=${a[0]}.${i} || i=${a[0]}
+
+  std::temp fn
+
+  err::debug 0 "${s}-${i} - prepare target"
+
+  while read; do
+
+    echo -n "."
+
+  done< <( rsync -aCrv ~/src/${s}/ ${path}/${s}-${i} 2>$fn; echo $? >>$fn )
+
+  if (( $( tail -n 1 $fn ) > 0 )); then
+
+    echo '?'
+    a=( $( wc -l $fn ) )
+
+    (( ${a[0]} == 1 )) || echo "warns:"
+
+    if (( ${a[0]} > 10 )); then
+
+      head -n 4 $fn && echo "..." && tail -n 4 $fn
+
+    else
+
+      (( ${a[0]} == 0 )) && std::cat < $fn
+
+    fi
+
+    _bashlyk_hError[$rc]="${_rsync_hError[$rc]}"
+    error $rc throw "rsync: ~/src/${s}/ -> ${path}/${s}-${i}"
+
+  else
+
+    echo 'ok'
+
+  fi
+
+  s="${s}-${i}"
+
+  err::debug 0 "$s - pack target"
+  tar cfz ${s}.tar.gz $s || error NotExistAndNotCreated throw "${s}.tar.gz"
+
+  rm -r $s
+
+  cd $1 || error NotExistAndNotCreated throw "${path}/${_1}"
+
+  uupdate ${s}.tar.gz
+
+  return 0
+
+}
+#
+#
+#
+updeb::main
+#

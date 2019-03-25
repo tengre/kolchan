@@ -5,7 +5,7 @@ _bashlyk=devtools . bashlyk
 #
 #
 #
-eval "__aId=( $Id: git-add-id 44 2019-03-25 22:56:00+04:00 yds $ )"
+eval "__aId=( $Id: git-add-id 47 2019-03-25 23:49:41+04:00 yds $ )"
 #
 #
 #
@@ -19,7 +19,7 @@ git::usage() {
             "${__aId[3]}"                                                      \
             "2016-$(date +%Y)"
 
-#****h* svn2git/git-add-id
+#****h* devtools/git-add-id
 	cat <<-EOF | tr -d '#'
 #  DESCRIPTION
 #    Easy way to emulate SVN keywords. Currently, compound keyword "Id"  handled
@@ -54,7 +54,7 @@ git::usage() {
 
 }
 #******
-#****f* svn2git/git::add
+#****f* devtools/git::add
 #  USAGE
 #    git::add <revision> <file>
 #  DESCRIPTION
