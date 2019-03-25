@@ -4,9 +4,9 @@
  </head>
  <body>
  <div id="logo">
-+<span style="float:left;">tools for SVN import to GIT</span>
++<span style="float:left;">set of the bash(lyk) scripts for development and build packages</span>
  <a name="robo_top_of_doc"></a>
-+<span style="float:right;">svn2git</span>
++<span style="float:right;">kolchan</span>
  </div> <!-- logo -->
  <h3>TABLE OF CONTENTS</h3>
  <ul>
