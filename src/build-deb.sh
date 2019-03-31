@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: build-deb.sh 45 2019-03-25 23:16:33+04:00 yds $
+# $Id: build-deb.sh 51 2019-03-31 18:37:18+04:00 yds $
 #
 _bashlyk=buildpackage . bashlyk
 
@@ -26,7 +26,6 @@ buildpackage::main() {
     CFG cfg
     cfg.storage.use /etc/lsb-release
     cfg.load []DISTRIB_CODENAME
-    cfg.show
 
     if sCodeName="$( cfg.get []DISTRIB_CODENAME )"; then
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: svnsetlog.sh 44 2019-03-25 22:56:00+04:00 yds $
+# $Id: svnsetlog.sh 51 2019-03-31 18:37:18+04:00 yds $
 #
 _bashlyk=devtools . bashlyk
 #
@@ -15,15 +15,13 @@ svnsetlog::main() {
 
   eval set -- "$(_ sArg)"
 
-  local r
-
   throw on MissingArgument $1
-  throw on NoSuchFileOrDir "${pathSVN}/$1"
+  throw on NoSuchDir "${pathSVN}/$1"
 
-  while read r; do
+  while read; do
 
-    echo "$1 - setlog $r"
-    svnadmin setlog ${pathSVN}/$1 -r ${r/r/} --bypass-hooks $r
+    echo "$1 - setlog $REPLY"
+    svnadmin setlog ${pathSVN}/$1 -r ${REPLY/r/} --bypass-hooks $REPLY
 
   done< <( ls -rt r* )
 

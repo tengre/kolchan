@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: subgit.sh 44 2019-03-25 22:56:00+04:00 yds $
+# $Id: subgit.sh 51 2019-03-31 18:37:18+04:00 yds $
 #
 _bashlyk=devtools . bashlyk
 #
@@ -9,47 +9,47 @@ _bashlyk=devtools . bashlyk
 subgit::main() {
 
   throw on CommandNotFound subgit
-  
+
   local pathGIT pathSVN project
   local -a aAuthors
-  
+
   CFG cfg
-  
+
   cfg.bind.cli authors{a}:-- config{c}: help{h} git{g}: project{p}: svn{s}:
-  
+
   cfg.storage.use $( cfg.getopt config )
-  
+
   cfg.load []git,project,svn [authors]=
-  
-  pathGIT=$( cfg.get git ) 
-  pathSVN=$( cfg.get svn ) 
-  project=$( cfg.get project ) 
+
+  pathGIT=$( cfg.get git )
+  pathSVN=$( cfg.get svn )
+  project=$( cfg.get project )
 
   s=$( cfg.get [authors] )
   eval "${s/declare -a a/declare -a aAuthors}"
-  
+
   cfg.free
-  
+
   : ${pathGIT:=opt/dat/git}
   : ${pathSVN:=opt/dat/svn}
 
   if [[ $project ]]; then
-  
+
     pathGIT+="/${project}.git"
     pathSVN+="/${project}"
-  
+
   fi
 
-  throw on NoSuchFileOrDir $pathSVN
-  
+  throw on NoSuchDir $pathSVN
+
   #
   # prepare authors substitution
   #
-  std::temp fnAuthors 
+  std::temp fnAuthors
   for s in "${aAuthors[@]}"; do
-  
+
     echo "$s" >> $fnAuthors
-  
+
   done
   [[ -s $fnAuthors ]] && fnAuthors="--authors-file $fnAuthors" || fnAuthors=
 

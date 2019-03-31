@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: uupdeb 47 2019-03-25 23:40:02+04:00 yds $
+# $Id: uupdeb 51 2019-03-31 18:44:39+04:00 yds $
 #
 _bashlyk=buildpackage . bashlyk
 #
@@ -40,9 +40,10 @@ updeb::main() {
   local -a a
   local _1="$1" fn i path=~/builds s v
 
-  mkdir -p $path && cd $path || error NotExistAndNotCreated throw $path
+  throw on NotExistAndNotCreated $path
+  cd $path || error NotPermitted throw -- $path
 
-  [[ -d ${path}/${1} ]] || error NoSuchFileOrDir throw ${path}/${_1}
+  throw on NoSuchDir ${path}/${_1}
 
   [[ ${1%-*} != $1 ]] || error InvalidArgument throw "$_1 - expected x-y form"
 
@@ -50,7 +51,8 @@ updeb::main() {
 
   err::debug 0 "source $s"
 
-  [[ -d ~/src/$s ]] && cd ~/src/$s || error NoSuchFileOrDir throw ~/src/$s
+  throw on NoSuchDir ~/src/$s
+  cd ~/src/$s || error NotPermitted throw -- ~/src/$s
 
   if ! LC_ALL=C git log 2>&1 | grep '^fatal:.* not have any commits' >/dev/null
   then
@@ -59,7 +61,7 @@ updeb::main() {
 
   fi
 
-  [[ -s VERSION ]] || error NoSuchFileOrDir throw ~/src/VERSION
+  throw on NoSuchFile ~/src/VERSION
 
   a=( $( < VERSION ) )
 
@@ -112,7 +114,8 @@ updeb::main() {
 
   rm -r $s
 
-  cd $1 || error NotExistAndNotCreated throw "${path}/${_1}"
+  throw on NotExistAndNotCreated ${path}/${_1}
+  cd $1 || error NotPermitted throw "${path}/${_1}"
 
   uupdate ${s}.tar.gz
 

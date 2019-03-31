@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: svnlog2revs.sh 44 2019-03-25 22:56:00+04:00 yds $
+# $Id: svnlog2revs.sh 51 2019-03-31 18:37:18+04:00 yds $
 #
 _bashlyk=devtools . bashlyk
 #
@@ -10,7 +10,7 @@ svnlog2revs::main() {
 
   throw on CommandNotFound rm sed touch
   throw on MissingArgument $1
-  throw on NoSuchFileOrDir $1
+  throw on NoSuchFile $1
 
   eval set -- "$(_ sArg)"
 
@@ -25,7 +25,7 @@ svnlog2revs::main() {
     [[ "$s" =~ ^------------------------------------------------------------------------$ ]] && continue
     if [[ "$s" =~ ^(r[0-9]+)[[:space:]]\|[[:space:]][[:graph:]]+[[:space:]]\|[[:space:]](.*)[[:space:]]\(.*\).*[0-9]+.line(s)?$ ]]; then
 
-      if [[ -n "$fnRev" && -f "$fnRev" && -n "$tsRev" ]]; then
+      if [[ $fnRev && -f $fnRev && $tsRev ]]; then
 
         [[ "$2" == "add-svn-rev" ]] && printf -- "--\n--\t(svn rev %s)\n" "$fnRev" >> $fnRev
         sed -i -r -e "s/%SVNLOG2REVSTABULA%/\t/g" -e "s/%SVNLOG2REVSIDENT%//" $fnRev
@@ -33,7 +33,7 @@ svnlog2revs::main() {
 
       fi
 
-      if [[ -n "${BASH_REMATCH[1]}" ]]; then
+      if [[ ${BASH_REMATCH[1]} ]]; then
 
         fnRev="${BASH_REMATCH[1]}"
         tsRev="${BASH_REMATCH[2]}"
@@ -56,7 +56,7 @@ svnlog2revs::main() {
 
   done < $fn
 
-  if [[ $fnRev && -f "$fnRev" && -n "$tsRev" ]]; then
+  if [[ $fnRev && -f "$fnRev" && $tsRev ]]; then
 
     [[ $2 == add-svn-rev ]] && printf -- "--\n--\t(svn rev %s)\n" "$fnRev" >> $fnRev
     sed -i -r -e "s/%SVNLOG2REVSTABULA%/\t/g" -e "s/%SVNLOG2REVSIDENT%//" $fnRev

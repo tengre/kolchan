@@ -5,7 +5,7 @@ _bashlyk=devtools . bashlyk
 #
 #
 #
-eval "__aId=( $Id: git-add-id 47 2019-03-25 23:49:41+04:00 yds $ )"
+eval "__aId=( $Id: git-add-id 51 2019-03-31 18:37:18+04:00 yds $ )"
 #
 #
 #
@@ -32,7 +32,7 @@ git::usage() {
 #    git-add-id [ -h|--help ] | [<files> ...]
 #  ARGUMENTS
 #    -h, --help - show this usage and exit
-#    <files>    - files for forced addition to the git index with updating the 
+#    <files>    - files for forced addition to the git index with updating the
 #                 keyword "Id" (if needed)
 #                 The default (no arguments) - added only modified files, which
 #                 are already included to the git repository.
@@ -43,10 +43,10 @@ git::usage() {
 #  EXAMPLE
 #    git init
 #    echo '$(printf '\044Id\044')' > git-add-id.txt
-#    git-add-id git-add-id.txt 
+#    git-add-id git-add-id.txt
 #    output: try add to index with Revision 1:
 #    output: added to index  .. "git-add-id.txt"
-#    cat git-add-id.txt 
+#    cat git-add-id.txt
 #    output: $(printf '\044Id') git-add-id.txt 1 $( date --rfc-3339=s ) $( id -nu ) $(printf '\044')
 	EOF
 
@@ -58,7 +58,7 @@ git::usage() {
 #  USAGE
 #    git::add <revision> <file>
 #  DESCRIPTION
-#    modify existing in the <file> keyword "Id" with <revision> and add this 
+#    modify existing in the <file> keyword "Id" with <revision> and add this
 #    file to the git index
 #  ARGUMENTS
 #    <revision>      - usually summary commits number from 'git status -s'
@@ -78,7 +78,7 @@ git::add() {
   ic=$1
   shift
 
-  [[ -e "$@" ]] || error NoSuchFileOrDir warn+return "$@"
+  [[ -e "$@" ]] || error NoSuchFile warn+return "$@"
   [[ -d "$@" ]] && error InvalidArgument warn+return "$@ - file expected.."
 
   fn="${@##*/}"
@@ -123,7 +123,7 @@ git::main() {
   [[ $1 =~ ^--?h ]] && git::usage
 
   git status >/dev/null 2>&1
-  
+
   if (( $? == 128 )); then
 
     err::debugf 0 "\n  [!]Warn: git repository (or any of the parent directories): .git not found..\n  show usage by --help option..\n"
