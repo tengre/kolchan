@@ -1,1 +1,1 @@
-set of the bash scripts for development and build packages
+set of the bash(lyk) scripts for development and build packages

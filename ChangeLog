@@ -1,3 +1,9 @@
+Mon, 01 Apr 2019 22:51:02 +0400
+	New upstream release
+        Version 0.6
+- added new script for autotools use - automake.sh
+
+
 Mon, 25 Mar 2019 23:55:33 +0400
 	New upstream release
         Version 0.5

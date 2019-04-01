@@ -5,7 +5,7 @@ _bashlyk=devtools . bashlyk
 #
 #
 #
-eval "__aId=( $Id: git-add-id 51 2019-03-31 18:37:18+04:00 yds $ )"
+eval "__aId=( $Id: git-add-id 52 2019-04-01 23:07:05+04:00 yds $ )"
 #
 #
 #
@@ -78,8 +78,7 @@ git::add() {
   ic=$1
   shift
 
-  [[ -e "$@" ]] || error NoSuchFile warn+return "$@"
-  [[ -d "$@" ]] && error InvalidArgument warn+return "$@ - file expected.."
+  errorify on NoSuchFile $* || error warn+return "${*:-no arguments} - file expected.."
 
   fn="${@##*/}"
   ts="$( date --rfc-3339=s )"
