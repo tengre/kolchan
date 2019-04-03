@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: uupdeb 51 2019-03-31 18:44:39+04:00 yds $
+# $Id: uupdeb 53 2019-04-03 06:46:45+04:00 yds $
 #
 _bashlyk=buildpackage . bashlyk
 #
@@ -38,21 +38,26 @@ updeb::main() {
   throw on MissingArgument $1
 
   local -a a
-  local _1="$1" fn i path=~/builds s v
+  local fn i pathBuilds pathSrc s v
 
-  throw on NotExistAndNotCreated $path
-  cd $path || error NotPermitted throw -- $path
+  : ${pathBuilds:=~/builds}
+  : ${pathSrc:=~/src}
 
-  throw on NoSuchDir ${path}/${_1}
 
-  [[ ${1%-*} != $1 ]] || error InvalidArgument throw "$_1 - expected x-y form"
+  throw on NotExistNotCreated $pathBuilds
+  cd $pathBuilds || error NotPermitted throw -- $pathBuilds
+
+  throw on NoSuchDir ${pathBuilds}/${1}
+
+  [[ ${1%-*} != $1 ]] || error InvalidArgument throw "$1 - expected x-y form"
 
   s=${1%-*}
 
   err::debug 0 "source $s"
+  pathSrc=${pathSrc}/${s}
 
-  throw on NoSuchDir ~/src/$s
-  cd ~/src/$s || error NotPermitted throw -- ~/src/$s
+  throw on NoSuchDir $pathSrc
+  cd $pathSrc || error NotPermitted throw -- $pathSrc
 
   if ! LC_ALL=C git log 2>&1 | grep '^fatal:.* not have any commits' >/dev/null
   then
@@ -61,13 +66,13 @@ updeb::main() {
 
   fi
 
-  throw on NoSuchFile ~/src/VERSION
+  throw on NoSuchFile VERSION
 
   a=( $( < VERSION ) )
 
   [[ ${a[0]} =~ [0-9]+.*[0-9]+ ]] || error InvalidArgument throw "${a[0]}"
 
-  cd $path || error NotPermitted throw $path
+  cd $pathBuilds || error NotPermitted throw $pathBuilds
 
   std::isNumber $i && i=${a[0]}.${i} || i=${a[0]}
 
@@ -79,7 +84,7 @@ updeb::main() {
 
     echo -n "."
 
-  done< <( rsync -aCrv ~/src/${s}/ ${path}/${s}-${i} 2>$fn; echo $? >>$fn )
+  done< <( rsync -aCrv ${pathSrc}/ ${pathBuilds}/${s}-${i} 2>$fn; echo $? >>$fn )
 
   if (( $( tail -n 1 $fn ) > 0 )); then
 
@@ -99,7 +104,7 @@ updeb::main() {
     fi
 
     _bashlyk_hError[$rc]="${_rsync_hError[$rc]}"
-    error $rc throw "rsync: ~/src/${s}/ -> ${path}/${s}-${i}"
+    error $rc throw "rsync: ${pathSrc}/ -> ${pathBuilds}/${s}-${i}"
 
   else
 
@@ -110,12 +115,12 @@ updeb::main() {
   s="${s}-${i}"
 
   err::debug 0 "$s - pack target"
-  tar cfz ${s}.tar.gz $s || error NotExistAndNotCreated throw "${s}.tar.gz"
+  tar cfz ${s}.tar.gz $s || error NotExistNotCreated throw "${s}.tar.gz"
 
   rm -r $s
 
-  throw on NotExistAndNotCreated ${path}/${_1}
-  cd $1 || error NotPermitted throw "${path}/${_1}"
+  throw on NoSuchDir ${pathBuilds}/${1}
+  cd $1 || error NotPermitted throw "${pathBuilds}/${1}"
 
   uupdate ${s}.tar.gz
 
