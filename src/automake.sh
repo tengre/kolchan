@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: automake.sh 52 2019-04-01 23:06:25+04:00 yds $
+# $Id: automake.sh 54 2019-04-18 17:21:53+04:00 yds $
 #
 _bashlyk=devtools . bashlyk
 #
@@ -14,6 +14,9 @@ automake::main() {
   local fn sPackage sVersion sAuthor pathWork
 
   : ${sVersion:=0.1}
+
+  errorify on CommandNotFound git && : ${sAuthor:="$( git config --get user.name ) <$( git config --get user.email )>"}
+
   : ${sAuthor:="${DEBFULLNAME:-$USER} <${DEBEMAIL:-$USER@localhost.localdomain}>"}
 
   pathWork="$( pwd )"
