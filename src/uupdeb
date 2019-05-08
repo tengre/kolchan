@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# $Id: uupdeb 56 2019-05-08 10:29:03+04:00 yds $
+# $Id: uupdeb 59 2019-05-08 19:11:43+04:00 yds $
 #
-_bashlyk_log=nouse _bashlyk=buildpackage . bashlyk
+_bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
 #
 #
@@ -33,39 +33,41 @@ updeb::main() {
 
   throw on CommandNotFound bc git grep head mv pwd rsync uupdate tail tar tr wc xargs
 
-  eval set -- "$( _ sArg )"
-
   local -a a
-  local fn fnBuildInfo i pathBuilds pathSrc s sBuildPrev v
+  local fn fnConfig i pathBuilds pathSource s sBaseBuild sProject
 
-  : ${pathBuilds:=~/builds}
-  : ${pathSrc:=~/src}
+  CFG cfg
+  cfg.bind.cli path-source{s}: project{p}: path-builds{b}: basebuild{B}: config{c}:
+  fnConfig=$( cfg.getopt config ) || fnConfig=$( cfg.storage.use && cfg.storage.show )
+  cfg.storage.use $fnConfig
+  cfg.load
+
+       sMode="$( cfg.get     []mode      )" ||      sMode='binary'
+    sProject="$( cfg.get     []project   )" ||   sProject=$PROJECT
+  sBaseBuild="$( cfg.get     []basebuild )"
+  pathBuilds="$( cfg.get [path]builds    )" || pathBuilds=~/builds
   
-  [[ $PRJ_BUILDINFO ]] && fnBuildInfo=$PRJ_BUILDINFO || fnBuildInfo='/tmp/bashlyk.path4build'
+  if ! pathSource="$( cfg.get [path]source )"; then
 
-  throw on NotExistNotCreated $pathBuilds
+    [[ $sProject ]] && pathSource=~/src/${sProject} || error MissingArgument throw -- 'path-source|-s'
+
+  fi
+
+  throw on NoSuchDir $pathSource
+  [[ $sProject ]] || sProject=${pathSource##*/}
+ 
+  throw on NoSuchDir $pathBuilds
   cd $pathBuilds || error NotPermitted throw -- $pathBuilds
 
   rm -rf *.orig
 
-  if [[ $GIT_URL ]]; then
-    s=${GIT_URL##*/}
-    pathSrc=$GIT_URL
-    sBuildPrev=$( ls -td1 --group-directories-first ${s}* | head -n 1 )
-  else
-    throw on MissingArgument $1
-    [[ ${1%-*} != $1 ]] || error InvalidArgument throw "$1 - expected x-y form"
-    s=${1%-*}
-    pathSrc=${pathSrc}/${s}
-    sBuildPrev=$1
-  fi
+  [[ $sBaseBuild ]] || sBaseBuild=$( ls -td1 --group-directories-first ${sProject}* | head -n 1 )
 
-  throw on NoSuchDir ${pathBuilds}/${sBuildPrev}
+  throw on NoSuchDir ${pathBuilds}/${sBaseBuild}
 
-  err::debug 0 "source project $s"
+  err::debug 0 "source project $sProject"
 
-  throw on NoSuchDir $pathSrc
-  cd $pathSrc || error NotPermitted throw -- $pathSrc
+  cd $pathSource || error NotPermitted throw -- $pathSource
 
   if ! LC_ALL=C git log 2>&1 | grep '^fatal:.* not have any commits' >/dev/null
   then
@@ -84,19 +86,29 @@ updeb::main() {
 
   [[ ${a[0]} =~ [0-9]+.*[0-9]+ ]] || error InvalidArgument throw "${a[0]}"
 
-  cd $pathBuilds || error NotPermitted throw $pathBuilds
+  cd $pathBuilds || error NotPermitted throw -- $pathBuilds
 
   std::isNumber $i && i=${a[0]}.${i} || i=${a[0]}.${a[1]}
 
+  cfg.show
+  cfg.storage.show
+
+  if [[ ${sProject}-${i} == ${sBaseBuild} ]]; then
+
+    err::debug 0 base build is same a target - ${sBaseBuild}, abort..
+    return 1
+
+  fi
+
+  err::debug 0 "prepare target ${sProject}-${i} from ${sBaseBuild}:"
+  return 0
+
   std::temp fn
-
-  err::debug 0 "prepare target ${s}-${i}:"
-
   while read; do
 
     err::debugf 0 '%s' '.'
 
-  done< <( rsync -aCrv ${pathSrc}/ ${pathBuilds}/${s}-${i} 2>$fn; echo $? >>$fn )
+  done< <( rsync -aCrv ${pathSource}/ ${pathBuilds}/${sProject}-${i} 2>$fn; echo $? >>$fn )
 
   if (( $( tail -n 1 $fn ) > 0 )); then
 
@@ -116,7 +128,7 @@ updeb::main() {
     fi >&2
 
     _bashlyk_hError[$rc]="${_rsync_hError[$rc]}"
-    error $rc throw "rsync: ${pathSrc}/ -> ${pathBuilds}/${s}-${i}"
+    error $rc throw "rsync: ${pathSource}/ -> ${pathBuilds}/${sProject}-${i}"
 
   else
 
@@ -124,27 +136,50 @@ updeb::main() {
 
   fi
 
-  s="${s}-${i}"
+  s="${sProject}-${i}"
 
   err::debug 0 "pack target $s"
   tar cfz ${s}.tar.gz $s || error NotExistNotCreated throw "${s}.tar.gz"
 
   rm -rf $s
 
-  err::debug 0 "build path $pathBuilds :: prev path $sBuildPrev"
-  throw on NoSuchDir ${pathBuilds}/${sBuildPrev}
-  cd $sBuildPrev || error NotPermitted throw "${pathBuilds}/${sBuildPrev}"
+  err::debug 0 "build path $pathBuilds :: prev build $sBaseBuild"
+  throw on NoSuchDir ${pathBuilds}/${sBaseBuild}
+  cd $sBaseBuild || error NotPermitted throw "${pathBuilds}/${sBaseBuild}"
 
-  if uupdate ${s}.tar.gz >&2; then
+  std::temp fn
+  echo -n "start building:"
 
-    echo "${pathBuilds}/${s}" | tee $fnBuildInfo
+  while read; do
+    if [[ $REPLY =~ ^return.code:.(.*)$ ]]; then
+      cfg.set [uupdate]status = ${BASH_REMATCH[1]}
+      if [[ $( cfg.get [uupdate]status ) != '0' ]]; then
+        echo "fail.."
+        err::debug 0 stderr:
+        cat $fn 1>&2
+        i=1
+      else
+        echo "ok!"
+        echo "target path ${pathBuilds}/${s}"
+        cfg.set [path]target = ${pathBuilds}/${s}
+        i=0
+      fi
+    else
+      echo $REPLY >> $fn
+      echo -n '.'
+    fi
+  done< <( LC_ALL=C uupdate ${s}.tar.gz 2>&1; echo "return code: $?" )
+
+  err::debug 0 update status from version $sBaseBuild:
+  cfg.show
+  cfg.save
+  cfg.free
+
+  if (( i == 0 )); then 
     return 0
-
   else
-
     cd $pathBuilds && rm -rf $s
     return 1
-
   fi
 
 }
