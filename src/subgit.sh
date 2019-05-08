@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
-# $Id: subgit.sh 51 2019-03-31 18:37:18+04:00 yds $
+# $Id: subgit.sh 57 2019-05-08 10:54:57+04:00 yds $
 #
 _bashlyk=devtools . bashlyk
 #
