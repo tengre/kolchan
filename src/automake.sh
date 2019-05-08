@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
-# $Id: automake.sh 54 2019-04-18 17:21:53+04:00 yds $
+# $Id: automake.sh 55 2019-05-08 10:25:20+04:00 yds $
 #
-_bashlyk=devtools . bashlyk
+_bashlyk_log=nouse _bashlyk=devtools . bashlyk
 #
 #
 #

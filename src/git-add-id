@@ -1,11 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 #
-_bashlyk=devtools . bashlyk
+_bashlyk_log=nouse _bashlyk=devtools . bashlyk
 #
 #
 #
-eval "__aId=( $Id: git-add-id 52 2019-04-01 23:07:05+04:00 yds $ )"
+eval "__aId=( $Id: git-add-id 55 2019-05-08 10:24:06+04:00 yds $ )"
 #
 #
 #
@@ -139,9 +139,15 @@ git::main() {
 
   else
 
-    i="$( git shortlog -s | grep -oP '^\s+\d+\s+' | xargs | tr ' ' '+' | bc )"
+    i="$( exec -c git shortlog -s | grep -o '[[:digit:]]*' | xargs | tr ' ' '+' | bc )"
+
+    if ! std::isNumber $i; then
+      [[ $PRJ_COMMITS ]] && i=$PRJ_COMMITS
+    fi
 
   fi
+
+  err::debug 0 "timestamp $tsIndexed :: total commits $i"
 
   std::isNumber $i || error NotNumber throw "$i - summary of the commits expected"
 
