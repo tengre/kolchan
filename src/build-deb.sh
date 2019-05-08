@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-# $Id: build-deb.sh 55 2019-05-08 10:25:20+04:00 yds $
+# $Id: build-deb.sh 58 2019-05-08 17:23:45+04:00 yds $
 #
-_bashlyk_log=nouse bashlyk=buildpackage . bashlyk
+_bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
 : ${DEBUGLEVEL:=2}
 
@@ -10,13 +10,37 @@ buildpackage::main() {
 
   throw on CommandNotFound dpkg-buildpackage head grep rsync sed
 
-  local pathWork sCodeName
+  local fn fnConfig pathTarget pathSource sCodeName sMode sProject
 
-  [[ $PRJ_BUILDINFO && -s $PRJ_BUILDINFO ]] && pathWork="$( head -n 1 $PRJ_BUILDINFO )" || pathWork="$( pwd )"
+  CFG cfg
+  cfg.bind.cli mode{m}: path-source{s}: path-target{t}: config{c}:
+  fnConfig=$( cfg.getopt config ) || fnConfig=$( cfg.storage.use && cfg.storage.show )
+  cfg.storage.use $fnConfig
+  cfg.load
 
-  throw on NoSuchDir $pathWork
+       sMode="$( cfg.get     []mode    )" ||      sMode='binary'
+    sProject="$( cfg.get     []project )" ||   sProject=$PROJECT
+  pathSource="$( cfg.get [path]source  )" || pathSource=~/src
 
-  cd $pathWork || error NotPermitted throw -- $pathWork
+  if ! pathTarget="$( cfg.get [path]target )"; then
+
+    if [[ $PRJ_BUILDINFO && -s $PRJ_BUILDINFO ]]; then
+
+      pathTarget="$( head -n 1 $PRJ_BUILDINFO )"
+
+    else
+
+      pathTarget="$( pwd )"
+
+    fi
+
+  fi
+
+  throw on NoSuchDir $pathTarget
+
+  cfg.storage.show
+
+  cd $pathTarget || error NotPermitted throw -- $pathTarget
 
   if [[ -d debian.upstream && -d debian ]]; then
 
@@ -29,9 +53,9 @@ buildpackage::main() {
 
   if head -n 1 debian/changelog | grep -q UNRELEASED; then
 
-    CFG cfg
-    cfg.storage.use /etc/lsb-release
-    cfg.load []DISTRIB_CODENAME
+    CFG cfgLSB
+    cfgLSB.storage.use /etc/lsb-release
+    cfgLSB.load []DISTRIB_CODENAME
 
     if sCodeName="$( cfg.get []DISTRIB_CODENAME )"; then
 
@@ -40,12 +64,38 @@ buildpackage::main() {
 
     fi
 
-    cfg.free
+    cfgLSB.free
 
   fi
 
+  std::temp fn
+  echo -n "start building:"
+  while read; do
 
-  dpkg-buildpackage -rfakeroot
+  if   [[ $REPLY =~ dpkg-genchanges.--build=(source|any|all|binary|full).\>../(.*)$ ]]; then
+    cfg.set [buildinfo]${BASH_REMATCH[1]} = ${BASH_REMATCH[2]}
+  elif [[ $REPLY =~ dpkg-deb:.building.package.*in.*../(.*\.deb) ]]; then
+    cfg.set [buildinfo]package = ${BASH_REMATCH[1]}
+  elif [[ $REPLY =~ ^return.code:.(.*)$ ]]; then
+    cfg.set [buildinfo]status = ${BASH_REMATCH[1]}
+    if [[ $( cfg.get [buildinfo]status ) != '0' ]]; then
+      echo "fail.."
+      err::debug 0 stderr:
+      cat $fn 1>&2
+    else
+      echo "ok!"
+    fi
+  else
+    echo $REPLY >> $fn
+    echo -n '.'
+  fi
+
+  done< <( LC_ALL=C dpkg-buildpackage --build=$sMode -rfakeroot 2>&1; echo "return code: $?" )
+
+  err::debug 0 buildinfo:
+  cfg.show
+  cfg.save
+  cfg.free
 
 }
 #
