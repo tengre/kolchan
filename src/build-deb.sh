@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: build-deb.sh 58 2019-05-08 17:23:45+04:00 yds $
+# $Id: build-deb.sh 60 2019-05-09 03:01:07+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -16,6 +16,7 @@ buildpackage::main() {
   cfg.bind.cli mode{m}: path-source{s}: path-target{t}: config{c}:
   fnConfig=$( cfg.getopt config ) || fnConfig=$( cfg.storage.use && cfg.storage.show )
   cfg.storage.use $fnConfig
+  err::debug 0 project configuration $( cfg.storage.show )
   cfg.load
 
        sMode="$( cfg.get     []mode    )" ||      sMode='binary'
@@ -37,8 +38,6 @@ buildpackage::main() {
   fi
 
   throw on NoSuchDir $pathTarget
-
-  cfg.storage.show
 
   cd $pathTarget || error NotPermitted throw -- $pathTarget
 

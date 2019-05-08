@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: uupdeb 59 2019-05-08 19:11:43+04:00 yds $
+# $Id: uupdeb 60 2019-05-09 03:01:07+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
@@ -40,13 +40,14 @@ updeb::main() {
   cfg.bind.cli path-source{s}: project{p}: path-builds{b}: basebuild{B}: config{c}:
   fnConfig=$( cfg.getopt config ) || fnConfig=$( cfg.storage.use && cfg.storage.show )
   cfg.storage.use $fnConfig
+  err::debug 0 project configuration $( cfg.storage.show )
+
   cfg.load
 
-       sMode="$( cfg.get     []mode      )" ||      sMode='binary'
     sProject="$( cfg.get     []project   )" ||   sProject=$PROJECT
   sBaseBuild="$( cfg.get     []basebuild )"
   pathBuilds="$( cfg.get [path]builds    )" || pathBuilds=~/builds
-  
+
   if ! pathSource="$( cfg.get [path]source )"; then
 
     [[ $sProject ]] && pathSource=~/src/${sProject} || error MissingArgument throw -- 'path-source|-s'
@@ -90,8 +91,6 @@ updeb::main() {
 
   std::isNumber $i && i=${a[0]}.${i} || i=${a[0]}.${a[1]}
 
-  cfg.show
-  cfg.storage.show
 
   if [[ ${sProject}-${i} == ${sBaseBuild} ]]; then
 
@@ -101,7 +100,6 @@ updeb::main() {
   fi
 
   err::debug 0 "prepare target ${sProject}-${i} from ${sBaseBuild}:"
-  return 0
 
   std::temp fn
   while read; do
@@ -165,12 +163,12 @@ updeb::main() {
         i=0
       fi
     else
-      echo $REPLY >> $fn
-      echo -n '.'
+      echo $REPLY | tee -a $fn
+      #echo -n '.'
     fi
   done< <( LC_ALL=C uupdate ${s}.tar.gz 2>&1; echo "return code: $?" )
 
-  err::debug 0 update status from version $sBaseBuild:
+  err::debug 0 status of the preparation target $s from $sBaseBuild:
   cfg.show
   cfg.save
   cfg.free
