@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# $Id: uupdeb 53 2019-04-03 06:46:45+04:00 yds $
+# $Id: uupdeb 56 2019-05-08 10:29:03+04:00 yds $
 #
-_bashlyk=buildpackage . bashlyk
+_bashlyk_log=nouse _bashlyk=buildpackage . bashlyk
 #
 #
 #
@@ -35,26 +35,34 @@ updeb::main() {
 
   eval set -- "$( _ sArg )"
 
-  throw on MissingArgument $1
-
   local -a a
-  local fn i pathBuilds pathSrc s v
+  local fn fnBuildInfo i pathBuilds pathSrc s sBuildPrev v
 
   : ${pathBuilds:=~/builds}
   : ${pathSrc:=~/src}
-
+  
+  [[ $PRJ_BUILDINFO ]] && fnBuildInfo=$PRJ_BUILDINFO || fnBuildInfo='/tmp/bashlyk.path4build'
 
   throw on NotExistNotCreated $pathBuilds
   cd $pathBuilds || error NotPermitted throw -- $pathBuilds
 
-  throw on NoSuchDir ${pathBuilds}/${1}
+  rm -rf *.orig
 
-  [[ ${1%-*} != $1 ]] || error InvalidArgument throw "$1 - expected x-y form"
+  if [[ $GIT_URL ]]; then
+    s=${GIT_URL##*/}
+    pathSrc=$GIT_URL
+    sBuildPrev=$( ls -td1 --group-directories-first ${s}* | head -n 1 )
+  else
+    throw on MissingArgument $1
+    [[ ${1%-*} != $1 ]] || error InvalidArgument throw "$1 - expected x-y form"
+    s=${1%-*}
+    pathSrc=${pathSrc}/${s}
+    sBuildPrev=$1
+  fi
 
-  s=${1%-*}
+  throw on NoSuchDir ${pathBuilds}/${sBuildPrev}
 
-  err::debug 0 "source $s"
-  pathSrc=${pathSrc}/${s}
+  err::debug 0 "source project $s"
 
   throw on NoSuchDir $pathSrc
   cd $pathSrc || error NotPermitted throw -- $pathSrc
@@ -63,6 +71,10 @@ updeb::main() {
   then
 
     i=$( git shortlog -s | grep -oP '^\s+\d+\s+' | xargs | tr ' ' '+' | bc )
+
+    if ! std::isNumber $i; then
+      [[ $PRJ_COMMITS ]] && i=$PRJ_COMMITS
+    fi
 
   fi
 
@@ -74,57 +86,66 @@ updeb::main() {
 
   cd $pathBuilds || error NotPermitted throw $pathBuilds
 
-  std::isNumber $i && i=${a[0]}.${i} || i=${a[0]}
+  std::isNumber $i && i=${a[0]}.${i} || i=${a[0]}.${a[1]}
 
   std::temp fn
 
-  err::debug 0 "${s}-${i} - prepare target"
+  err::debug 0 "prepare target ${s}-${i}:"
 
   while read; do
 
-    echo -n "."
+    err::debugf 0 '%s' '.'
 
   done< <( rsync -aCrv ${pathSrc}/ ${pathBuilds}/${s}-${i} 2>$fn; echo $? >>$fn )
 
   if (( $( tail -n 1 $fn ) > 0 )); then
 
-    echo '?'
+    err::debugf 0 '%s' '?'
     a=( $( wc -l $fn ) )
 
-    (( ${a[0]} == 1 )) || echo "warns:"
+    (( ${a[0]} == 1 )) || err::debug 0 'warns:'
 
     if (( ${a[0]} > 10 )); then
 
-      head -n 4 $fn && echo "..." && tail -n 4 $fn
+      head -n 4 $fn && echo '...' && tail -n 4 $fn
 
     else
 
       (( ${a[0]} == 0 )) && std::cat < $fn
 
-    fi
+    fi >&2
 
     _bashlyk_hError[$rc]="${_rsync_hError[$rc]}"
     error $rc throw "rsync: ${pathSrc}/ -> ${pathBuilds}/${s}-${i}"
 
   else
 
-    echo 'ok'
+    err::debug 0 'ok'
 
   fi
 
   s="${s}-${i}"
 
-  err::debug 0 "$s - pack target"
+  err::debug 0 "pack target $s"
   tar cfz ${s}.tar.gz $s || error NotExistNotCreated throw "${s}.tar.gz"
 
-  rm -r $s
+  rm -rf $s
 
-  throw on NoSuchDir ${pathBuilds}/${1}
-  cd $1 || error NotPermitted throw "${pathBuilds}/${1}"
+  err::debug 0 "build path $pathBuilds :: prev path $sBuildPrev"
+  throw on NoSuchDir ${pathBuilds}/${sBuildPrev}
+  cd $sBuildPrev || error NotPermitted throw "${pathBuilds}/${sBuildPrev}"
 
-  uupdate ${s}.tar.gz
+  if uupdate ${s}.tar.gz >&2; then
 
-  return 0
+    echo "${pathBuilds}/${s}" | tee $fnBuildInfo
+    return 0
+
+  else
+
+    cd $pathBuilds && rm -rf $s
+    return 1
+
+  fi
 
 }
 #
