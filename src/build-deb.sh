@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: build-deb.sh 60 2019-05-09 03:01:07+04:00 yds $
+# $Id: build-deb.sh 61 2019-05-13 01:19:28+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -56,14 +56,22 @@ buildpackage::main() {
     cfgLSB.storage.use /etc/lsb-release
     cfgLSB.load []DISTRIB_CODENAME
 
-    if sCodeName="$( cfg.get []DISTRIB_CODENAME )"; then
+    if sCodeName="$( cfgLSB.get []DISTRIB_CODENAME )"; then
 
       err::debug 2 debian/changelog - use codename $sCodeName
       sed -i "1 s/UNRELEASED/$sCodeName/" debian/changelog
 
+    else
+
+      err::debug 2 DISTRIB_CODENAME value not loaded from /etc/lsb-release
+
     fi
 
     cfgLSB.free
+
+  else
+
+    err::debug 2 UNRELEASED tag not found on debian/changelog
 
   fi
 
