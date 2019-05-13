@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: uupdeb 60 2019-05-09 03:01:07+04:00 yds $
+# $Id: uupdeb 62 2019-05-13 19:54:44+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
@@ -34,7 +34,7 @@ updeb::main() {
   throw on CommandNotFound bc git grep head mv pwd rsync uupdate tail tar tr wc xargs
 
   local -a a
-  local fn fnConfig i pathBuilds pathSource s sBaseBuild sProject
+  local fn fnConfig i iBuildNumber pathBuilds pathSource s sBaseBuild sBuildVersion sProject sVersion 
 
   CFG cfg
   cfg.bind.cli path-source{s}: project{p}: path-builds{b}: basebuild{B}: config{c}:
@@ -50,7 +50,7 @@ updeb::main() {
 
   if ! pathSource="$( cfg.get [path]source )"; then
 
-    [[ $sProject ]] && pathSource=~/src/${sProject} || error MissingArgument throw -- 'path-source|-s'
+    [[ $sProject ]] && pathSource=~/src/${sProject} || error MissingArgument throw -- 'source project undefined, see -s option'
 
   fi
 
@@ -73,40 +73,52 @@ updeb::main() {
   if ! LC_ALL=C git log 2>&1 | grep '^fatal:.* not have any commits' >/dev/null
   then
 
-    i=$( git shortlog -s | grep -oP '^\s+\d+\s+' | xargs | tr ' ' '+' | bc )
+    iBuildNumber=$( git shortlog -s | grep -oP '^\s+\d+\s+' | xargs | tr ' ' '+' | bc )
 
-    if ! std::isNumber $i; then
-      [[ $PRJ_COMMITS ]] && i=$PRJ_COMMITS
+    if ! std::isNumber $iBuildNumber; then
+      [[ $PRJ_COMMITS ]] && iBuildNumber=$PRJ_COMMITS
     fi
 
   fi
 
-  throw on NoSuchFile VERSION
+  $sVersion=$( git tag -l --sort=version:refname | tail -n 1 )
+  if [[ ! $sVersion ]]; then
 
-  a=( $( < VERSION ) )
+    if   [[ -s VERSION ]]; then
 
-  [[ ${a[0]} =~ [0-9]+.*[0-9]+ ]] || error InvalidArgument throw "${a[0]}"
+      a=( $( < VERSION ) )
+      sVersion=${a[0]}
+      iBuildNumber=${a[1]}
+
+    elif [[ -s ChangeLog ]]; then
+
+      sVersion=$(grep -i version ChangeLog | head -n 1 | xargs | cut -f 2 -d' ')
+
+    fi
+
+  fi
+
+  [[ $sVersion =~ [0-9]+.*[0-9]+ ]] || error InvalidArgument throw -- $sVersion
+  std::isNumber $iBuildNumber || iBuildNumber=$( date +%s )
+  sBuildVersion=${sProject}-${sVersion}.${iBuildNumber}
 
   cd $pathBuilds || error NotPermitted throw -- $pathBuilds
 
-  std::isNumber $i && i=${a[0]}.${i} || i=${a[0]}.${a[1]}
-
-
-  if [[ ${sProject}-${i} == ${sBaseBuild} ]]; then
+  if [[ $sBuildVersion == $sBaseBuild ]]; then
 
     err::debug 0 base build is same a target - ${sBaseBuild}, abort..
     return 1
 
   fi
 
-  err::debug 0 "prepare target ${sProject}-${i} from ${sBaseBuild}:"
+  err::debug 0 "prepare target $sBuildVersion from ${sBaseBuild}:"
 
   std::temp fn
   while read; do
 
     err::debugf 0 '%s' '.'
 
-  done< <( rsync -aCrv ${pathSource}/ ${pathBuilds}/${sProject}-${i} 2>$fn; echo $? >>$fn )
+  done< <( rsync -aCrv ${pathSource}/ ${pathBuilds}/${sBuildVersion} 2>$fn; echo $? >>$fn )
 
   if (( $( tail -n 1 $fn ) > 0 )); then
 
@@ -126,20 +138,18 @@ updeb::main() {
     fi >&2
 
     _bashlyk_hError[$rc]="${_rsync_hError[$rc]}"
-    error $rc throw "rsync: ${pathSource}/ -> ${pathBuilds}/${sProject}-${i}"
+    error $rc throw "rsync: ${pathSource}/ -> ${pathBuilds}/${sBuildVersion}"
 
   else
 
     err::debug 0 'ok'
 
   fi
+  
+  err::debug 0 "prepare build $sBuildVersion"
+  tar cfz ${sBuildVersion}.tar.gz $sBuildVersion || error NotExistNotCreated throw "${sBuildVersion}.tar.gz"
 
-  s="${sProject}-${i}"
-
-  err::debug 0 "pack target $s"
-  tar cfz ${s}.tar.gz $s || error NotExistNotCreated throw "${s}.tar.gz"
-
-  rm -rf $s
+  rm -rf $sBuildVersion
 
   err::debug 0 "build path $pathBuilds :: prev build $sBaseBuild"
   throw on NoSuchDir ${pathBuilds}/${sBaseBuild}
@@ -158,15 +168,15 @@ updeb::main() {
         i=1
       else
         echo "ok!"
-        echo "target path ${pathBuilds}/${s}"
-        cfg.set [path]target = ${pathBuilds}/${s}
+        echo "target path ${pathBuilds}/${sBuildVersion}"
+        cfg.set [path]target = ${pathBuilds}/${sBuildVersion}
         i=0
       fi
     else
-      echo $REPLY | tee -a $fn
-      #echo -n '.'
+      echo $REPLY > $fn
+      echo -n '.'
     fi
-  done< <( LC_ALL=C uupdate ${s}.tar.gz 2>&1; echo "return code: $?" )
+  done< <( LC_ALL=C uupdate ${sBuildVersion}.tar.gz 2>&1; echo "return code: $?" )
 
   err::debug 0 status of the preparation target $s from $sBaseBuild:
   cfg.show
