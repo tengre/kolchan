@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: uupdeb 62 2019-05-13 19:54:44+04:00 yds $
+# $Id: uupdeb 63 2019-05-16 19:06:42+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
@@ -81,7 +81,7 @@ updeb::main() {
 
   fi
 
-  $sVersion=$( git tag -l --sort=version:refname | tail -n 1 )
+  #sVersion=$( git tag -l --sort=version:refname | tail -n 1 )
   if [[ ! $sVersion ]]; then
 
     if   [[ -s VERSION ]]; then
@@ -99,7 +99,7 @@ updeb::main() {
   fi
 
   [[ $sVersion =~ [0-9]+.*[0-9]+ ]] || error InvalidArgument throw -- $sVersion
-  std::isNumber $iBuildNumber || iBuildNumber=$( date +%s )
+  std::isNumber $iBuildNumber || iBuildNumber=$( std::date %s )
   sBuildVersion=${sProject}-${sVersion}.${iBuildNumber}
 
   cd $pathBuilds || error NotPermitted throw -- $pathBuilds
@@ -133,7 +133,7 @@ updeb::main() {
 
     else
 
-      (( ${a[0]} == 0 )) && std::cat < $fn
+      (( ${a[0]} > 0 )) && std::cat < $fn
 
     fi >&2
 
@@ -156,7 +156,7 @@ updeb::main() {
   cd $sBaseBuild || error NotPermitted throw "${pathBuilds}/${sBaseBuild}"
 
   std::temp fn
-  echo -n "start building:"
+  echo -n "start uupdate:"
 
   while read; do
     if [[ $REPLY =~ ^return.code:.(.*)$ ]]; then
@@ -172,6 +172,7 @@ updeb::main() {
         cfg.set [path]target = ${pathBuilds}/${sBuildVersion}
         i=0
       fi
+      cfg.set [uupdate]timestamp = $( std::date %s )
     else
       echo $REPLY > $fn
       echo -n '.'
