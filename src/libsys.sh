@@ -1,8 +1,55 @@
 #
 # $I$
 #
+#****h* BASHLYK/libsys
+#  DESCRIPTION
+#    OOP style wrappers for various system commands:
+#    SYS::RSYNC - 
+#     - associative arrays are used to store the configuration data
+#     - OOP style used for a treatment of the configuration data:
+#       * functions (eg, get/set) bind with the configuration data, as "methods"
+#         of the corresponding instance of the base class "CFG"
+#       * used the constructor and destructor to manage the life cycle of the
+#         resources allocated for processing configuration data
+#     - configuration source may be not only single file but also a group of
+#       related files
+#     - supported the filtration ability  - retrieving only the specified
+#       sections and parameters
+#     - The possibility of simultaneous and independent work with different
+#       sources of the configuration data
+#     - Get/Set certain configuration data by using parameter as key
+#     - Record the configuration data to a file or output to the standard device
+#       in the INI format or "active configuration".
+#     - Support for Command Line Interface (CLI) - simultaneous determination of
+#       long and short options of configuration parameters.
+#     - parsing the command line arguments and their binding to configuration
+#       data that allows you to override selected parameters of the
+#       configuration file.
+#  USES
+#    libcfg
+#  EXAMPLE
+#    # create instance from SYS::RSYNC class
+#    SYS::RSYNC rsync
+#
+#    # set various properties for rsync operation
+#    rsync.title = syncing
+#    rsync.pathSource = /tmp/source
+#    rsync.pathTarget = /tmp/target
+#    rsync.options    = -aCrv --delete-after
+#    rsync.debugLevel = 2
+#    # start rsync
+#    rsync.run
+#    # destroy SYS::RSYNC object, free resources
+#    rsync.free
+#  AUTHOR
+#    Damir Sh. Yakupov <yds@bk.ru>
+#******
+#***iV* libcfg/BASH compatibility
+#  DESCRIPTION
+#    Compatibility checked by bashlyk (BASH version 4.xx or more required)
+#    $_BASHLYK_LIBCFG provides protection against re-using of this module
+#  SOURCE
 : ${_bashlyk_pathLib:="/usr/share/bashlyk"}
-
 [ -n "$_BASHLYK_LIBSYS_RSYNC" ] && return 0 || _BASHLYK_LIBSYS_RSYNC=1
 [ -n "$_BASHLYK" ] || . ${_bashlyk_pathLib}/bashlyk || eval '                  \
                                                                                \
@@ -16,9 +63,11 @@
 # SOURCE
 [[ -s ${_bashlyk_pathLib}/libcfg.sh ]] && . "${_bashlyk_pathLib}/libcfg.sh"
 #******
-#
-#
-#
+#****G* liberr/Global Variables
+#  DESCRIPTION
+#    Global variables of the library
+#  SOURCE
+# rsync error states definition
  _rsync_hError[0]="Success"
  _rsync_hError[1]="Syntax or usage error"
  _rsync_hError[2]="Protocol incompatibility"
@@ -42,39 +91,25 @@ _rsync_hError[35]="Timeout waiting for daemon connection"
 #
 _bashlyk_iErrorMissingMethod=165
 _bashlyk_iErrorBadMethod=164
-_bashlyk_iErrorExtraCharInKey=163
 _bashlyk_hError[$_bashlyk_iErrorMissingMethod]="instance failed - missing method"
 _bashlyk_hError[$_bashlyk_iErrorBadMethod]="instance failed - bad method"
-_bashlyk_hError[$_bashlyk_iErrorExtraCharInKey]="extra character(s) in the key"
 #
 #
 #
 declare -rg _bashlyk_settings_sys_rsync='
-    title options pathSource pathTarget truncateLog debugLevel onFailure onSuccess
+    debugLevel fileLog onFailure onSuccess options pathSource pathTarget title truncateLog
 '
 declare -rg _bashlyk_methods_sys_rsync='
     run free
 '
-#
-: ${DEBUGLEVEL:=2}
-
-#####
-# SYS::RSYNC rsync
-# rsync.Title       = sync
-# rsync.Options     = -aCrv --exclude changelog
-# rsync.pathSource  = debian.upstream
-# rsync.pathTarget  = debian/
-# rsync.ShowMaxLine = 16
-# rsync.DEBUGLEVEL  = info
-# rsync.onFailure   = throw
-# rsync.onSuccess   = rm -r debian.upstream
+#******
 #****e* libsys/SYS::RSYNC
 #  SYNOPSIS
 #    SYS::RSYNC [<id>]
 #  DESCRIPTION
 #    constructor for new instance <id> of the SYS::RSYNC "class" (object)
 #  NOTES
-#    public method
+#    constructor 
 #  ARGUMENTS
 #    valid variable name for created instance, default - used class name RSYNC as
 #    instance
@@ -99,17 +134,17 @@ SYS::RSYNC() {
 
   std::temp fn path="${TMPDIR}/${USER}/bashlyk" prefix='sys.rsync' suffix=".${o}"
 
-  f=$( declare -f SYS::RSYNC::settings 2>/dev/null ) || error IniMissingMethod throw -- SYS::RSYNC::settings for $o
+  f=$( declare -f SYS::RSYNC::settings 2>/dev/null ) || error MissingMethod throw -- SYS::RSYNC::settings for $o
   for s in $_bashlyk_settings_sys_rsync; do
 
-    echo "${f/SYS::RSYNC::settings/${o}.$s}" >> $fn  || error IniBadMethod     throw -- SYS::RSYNC::settings for $o
+    echo "${f/SYS::RSYNC::settings/${o}.$s}" >> $fn  || error BadMethod     throw -- SYS::RSYNC::settings for $o
 
   done
 
   for s in $_bashlyk_methods_sys_rsync; do
 
-    f=$( declare -f SYS::RSYNC::${s} 2>/dev/null ) || error IniMissingMethod throw -- SYS::RSYNC::${s} for $o
-    echo "${f/SYS::RSYNC::$s/${o}.$s}" >> $fn      || error IniBadMethod     throw -- SYS::RSYNC::${s} for $o
+    f=$( declare -f SYS::RSYNC::${s} 2>/dev/null ) || error MissingMethod throw -- SYS::RSYNC::${s} for $o
+    echo "${f/SYS::RSYNC::$s/${o}.$s}" >> $fn      || error BadMethod     throw -- SYS::RSYNC::${s} for $o
 
   done
 
@@ -158,12 +193,25 @@ SYS::RSYNC::free() {
 #              default, show property value
 #  NOTES
 #    fully virtual function, replaced by "get/set" methods when initializing an
-#    instance
+#    instance:
+#
+#    title       - show title message
+#    options     - rsync options
+#    pathSource  - source 
+#    pathTarget  - destination
+#    truncateLog - max error lines show
+#    debugLevel  - debug level
+#    onFailure   - run command on rsync fail
+#    onSuccess   - run command on rsync success 
+#    fileLog     - name of a temporary file to save rsync stdout (may be readonly)
 #  EXAMPLE
 #    SYS::RSYNC tSettings
-#    tSettings.title value
-#    tSettings.pathSource /tmp/source
-#    tSettings.pathTarget /tmp/target
+#    tSettings.title       = value
+#    tSettings.pathSource  = /tmp/source
+#    tSettings.pathTarget  = /tmp/target
+#    tSettings.options     = --aCrv --delete-after
+#    tSettings.debugLevel  = 2
+#    tSettings.truncateLog = 10
 #    tSettings.title                                                            | {{ '^value$'     }}
 #    tSettings.pathSource                                                       | {{ ^/tmp/source$ }}
 #    tSettings.pathTarget                                                       | {{ ^/tmp/target$ }}
@@ -173,6 +221,7 @@ SYS::RSYNC::settings() {
 
   local o=${FUNCNAME[0]%%.*} f=${FUNCNAME[0]#*.}
   [[ $* ]] && ${o}_settings.set $f $* || ${o}_settings.get $f
+  
 }
 #******
 #****e* libsys/SYS::RSYNC::run
@@ -183,62 +232,83 @@ SYS::RSYNC::settings() {
 #  NOTES
 #    public method
 #  ERRORS
-#    MissingArgument - the storage name is not specified
+#    child processes
+#  TODO
+#    improve verbosity level handling
 #  EXAMPLE
 #    mkdir -p /tmp/qwaszx1
 #    date -R > /tmp/qwaszx1/qwaszx3.txt
 #    SYS::RSYNC rsync
-#    rsync.pathSource /tmp/qwaszx1/
-#    rsync.pathTarget /tmp/qwaszx2
+#    rsync.pathSource = /tmp/qwaszx1/
+#    rsync.onSuccess  = rm -r /tmp/qwaszx1
+#    rsync.pathTarget = /tmp/qwaszx2
 #    rsync.run
+#    test -f /tmp/qwaszx2/qwaszx3.txt                                           #? false
 #    test -f /tmp/qwaszx2/qwaszx3.txt                                           #? true
 #    rm -r /tmp/qwaszx{1,2}
 #    rsync.free
 #  SOURCE
 SYS::RSYNC::run() {
 
-  local I rc o s V
+  local I fnErr fnStd fnRC rc o s V
   local -a a
 
   o=${FUNCNAME[0]%%.*}
   V=$( ${o}.debugLevel )
   I=$( ${o}.truncateLog )
 
-  err::debug $V && ${o}.title
+  err::debug $V && printf -- '%s:>' "$( ${o}.title )"
 
-  std::temp fn
+  std::temp fnErr
+  std::temp fnRC
+  std::temp fnStd
+  ${o}.fileLog = $fnStd
+  
   while read; do
 
     err::debugf $V '%s' '.'
+    echo "$REPLY" >> $fnStd
 
-  done< <( rsync $( ${o}.options ) $( ${o}.pathSource ) $( ${o}.pathTarget ) 2>$fn; echo $? >>$fn )
+  done< <( rsync $( ${o}.options ) $( ${o}.pathSource ) $( ${o}.pathTarget ) 2>$fnErr; echo $PIPESTATUS >$fnRC )
 
-  rc=$( tail -n 1 $fn )
+  rc=$( < $fnRC )
   if (( rc > 0 )); then
 
-    err::debug $V '?'
-    a=( $( wc -l $fn ) )
+    err::debug $V 'fail..'
+    a=( $( wc -l $fnErr ) )
 
     (( ${a[0]} == 1 )) || err::debug $V 'warns:'
 
     if (( ${a[0]} > I )); then
 
-      head -n $(( I/2 )) $fn && echo '...' && tail -n $(( I/2 )) $fn
+      head -n $(( I/2 )) $fnErr && echo '...' && tail -n $(( I/2 )) $fnErr
 
     else
 
-      (( ${a[0]} > 0 )) && std::cat < $fn
+      (( ${a[0]} > 0 )) && std::cat < $fnErr
 
     fi >&2
 
     _bashlyk_hError[$rc]="${_rsync_hError[$rc]}"
-    eval $( ${o}.onFailure )
-    error $rc warn -- rsync: $( ${o}.pathSource ) -> $( ${o}.pathTarget )
+    s="$( ${o}.onFailure )"
+    
+    if [[ $s =~ ^(echo|warn|return|echo\+return|warn\+return|exit|echo\+exit|warn\+exit|throw)$ ]]; then
+    
+      error $rc $s -- rsync: $( ${o}.pathSource ) - $( ${o}.pathTarget )
+      
+    else 
+    
+      [[ $s ]] && eval "$s"
+      
+    fi
+    
+    return $rc
 
   else
 
-    err::debug $V 'ok'
-    eval $( ${o}.onSuccess )
+    err::debug $V 'ok!'
+    s="$( ${o}.onSuccess )" && eval "$s" 
+    return 0
 
   fi
 }
