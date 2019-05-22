@@ -1,42 +1,22 @@
 #
-# $I$
+# $Id: libsys.sh 66 2019-05-22 01:27:49+04:00 yds $
 #
 #****h* BASHLYK/libsys
 #  DESCRIPTION
 #    OOP style wrappers for various system commands:
-#    SYS::RSYNC - 
-#     - associative arrays are used to store the configuration data
-#     - OOP style used for a treatment of the configuration data:
-#       * functions (eg, get/set) bind with the configuration data, as "methods"
-#         of the corresponding instance of the base class "CFG"
-#       * used the constructor and destructor to manage the life cycle of the
-#         resources allocated for processing configuration data
-#     - configuration source may be not only single file but also a group of
-#       related files
-#     - supported the filtration ability  - retrieving only the specified
-#       sections and parameters
-#     - The possibility of simultaneous and independent work with different
-#       sources of the configuration data
-#     - Get/Set certain configuration data by using parameter as key
-#     - Record the configuration data to a file or output to the standard device
-#       in the INI format or "active configuration".
-#     - Support for Command Line Interface (CLI) - simultaneous determination of
-#       long and short options of configuration parameters.
-#     - parsing the command line arguments and their binding to configuration
-#       data that allows you to override selected parameters of the
-#       configuration file.
+#    SYS::RSYNC - support for rsync
 #  USES
 #    libcfg
 #  EXAMPLE
 #    # create instance from SYS::RSYNC class
 #    SYS::RSYNC rsync
-#
 #    # set various properties for rsync operation
-#    rsync.title = syncing
 #    rsync.pathSource = /tmp/source
 #    rsync.pathTarget = /tmp/target
 #    rsync.options    = -aCrv --delete-after
 #    rsync.debugLevel = 2
+#    rsync.title      = sync $( rsync.pathSource) to $( rsync.pathTarget )
+#    rsync.onSuccess  = rm -r $( rsync.pathSource)
 #    # start rsync
 #    rsync.run
 #    # destroy SYS::RSYNC object, free resources
@@ -44,10 +24,10 @@
 #  AUTHOR
 #    Damir Sh. Yakupov <yds@bk.ru>
 #******
-#***iV* libcfg/BASH compatibility
+#***iV* libsys/bash compatibility
 #  DESCRIPTION
-#    Compatibility checked by bashlyk (BASH version 4.xx or more required)
-#    $_BASHLYK_LIBCFG provides protection against re-using of this module
+#    Compatibility checked by bashlyk (bash version 4.xx or more required)
+#    $_BASHLYK_LIBSYS provides protection against re-using of this module
 #  SOURCE
 : ${_bashlyk_pathLib:="/usr/share/bashlyk"}
 [ -n "$_BASHLYK_LIBSYS_RSYNC" ] && return 0 || _BASHLYK_LIBSYS_RSYNC=1
@@ -57,13 +37,13 @@
                                                                                \
 '
 #******
-#****L* libcfg/Used libraries
+#****L* libsys/Used libraries
 # DESCRIPTION
 #   Loading external libraries
 # SOURCE
 [[ -s ${_bashlyk_pathLib}/libcfg.sh ]] && . "${_bashlyk_pathLib}/libcfg.sh"
 #******
-#****G* liberr/Global Variables
+#****G* libsys/Global Variables
 #  DESCRIPTION
 #    Global variables of the library
 #  SOURCE
@@ -93,8 +73,6 @@ _bashlyk_iErrorMissingMethod=165
 _bashlyk_iErrorBadMethod=164
 _bashlyk_hError[$_bashlyk_iErrorMissingMethod]="instance failed - missing method"
 _bashlyk_hError[$_bashlyk_iErrorBadMethod]="instance failed - bad method"
-#
-#
 #
 declare -rg _bashlyk_settings_sys_rsync='
     debugLevel fileLog onFailure onSuccess options pathSource pathTarget title truncateLog
@@ -195,11 +173,11 @@ SYS::RSYNC::free() {
 #    fully virtual function, replaced by "get/set" methods when initializing an
 #    instance:
 #
-#    title       - show title message
+#    title       - title message
 #    options     - rsync options
 #    pathSource  - source 
 #    pathTarget  - destination
-#    truncateLog - max error lines show
+#    truncateLog - max error lines to show
 #    debugLevel  - debug level
 #    onFailure   - run command on rsync fail
 #    onSuccess   - run command on rsync success 
@@ -269,7 +247,7 @@ SYS::RSYNC::run() {
     err::debugf $V '%s' '.'
     echo "$REPLY" >> $fnStd
 
-  done< <( rsync $( ${o}.options ) $( ${o}.pathSource ) $( ${o}.pathTarget ) 2>$fnErr; echo $PIPESTATUS >$fnRC )
+  done< <( rsync $( ${o}.options ) $( ${o}.pathSource ) $( ${o}.pathTarget ) 2>$fnErr; echo $? >$fnRC )
 
   rc=$( < $fnRC )
   if (( rc > 0 )); then
