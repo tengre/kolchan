@@ -1,31 +1,13 @@
 #!/usr/bin/env bash
 #
-# $Id: build-deb.sh 63 2019-05-16 19:06:42+04:00 yds $
+# $Id: build-deb.sh 67 2019-05-23 01:10:49+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
-#
-#
-#
- _rsync_hError[0]="Success"
- _rsync_hError[1]="Syntax or usage error"
- _rsync_hError[2]="Protocol incompatibility"
- _rsync_hError[3]="Errors selecting input/output files, dirs"
- _rsync_hError[4]="Requested action not supported: an attempt was made to manipulate 64-bit files on a platform that cannot support them; or an option was specified that is supported by the client and not by the server."
- _rsync_hError[5]="Error starting client-server protocol"
- _rsync_hError[6]="Daemon unable to append to log-file"
-_rsync_hError[10]="Error in socket I/O"
-_rsync_hError[11]="Error in file I/O"
-_rsync_hError[12]="Error in rsync protocol data stream"
-_rsync_hError[13]="Errors with program diagnostics"
-_rsync_hError[14]="Error in IPC code"
-_rsync_hError[20]="Received SIGUSR1 or SIGINT"
-_rsync_hError[21]="Some error returned by waitpid()"
-_rsync_hError[22]="Error allocating core memory buffers"
-_rsync_hError[23]="Partial transfer due to error"
-_rsync_hError[24]="Partial transfer due to vanished source files"
-_rsync_hError[25]="The --max-delete limit stopped deletions"
-_rsync_hError[30]="Timeout in data send/receive"
-_rsync_hError[35]="Timeout waiting for daemon connection"
+
+: ${_kolchan_pathLib:=/usr/share/kolchan}
+
+. ${_kolchan_pathLib}/libsys.sh || throw
+
 #
 #
 #
@@ -68,41 +50,16 @@ buildpackage::main() {
   cd $pathTarget || error NotPermitted throw -- $pathTarget
 
   if [[ -d debian.upstream && -d debian ]]; then
-
-    err::debugf 0 'merge debian.upstream with debian:'
-    std::temp fn
-    while read; do
-
-      err::debugf 0 '%s' '.'
-
-    done< <( rsync -rav --exclude changelog debian.upstream/ debian/ 2>$fn; echo $? >>$fn )
-
-    if (( $( tail -n 1 $fn ) > 0 )); then
-
-      err::debugf 0 '%s' '?'
-      a=( $( wc -l $fn ) )
-
-      (( ${a[0]} == 1 )) || err::debug 0 'warns:'
-
-      if (( ${a[0]} > 10 )); then
-
-        head -n 4 $fn && echo '...' && tail -n 4 $fn
-
-      else
-
-        (( ${a[0]} > 0 )) && std::cat < $fn
-
-      fi >&2
-
-      _bashlyk_hError[$rc]="${_rsync_hError[$rc]}"
-      error $rc throw "rsync: debian.upstream -> debian/"
-
-    else
-
-      rm -r debian.upstream
-      err::debug 0 'ok'
-
-    fi
+  
+    SYS::RSYNC rsync
+    rsync.title = 'merge debian.upstream with debian:'
+    rsync.options = -arv --exclude changelog
+    rsync.pathSource = debian.upstream/
+    rsync.pathTarget = debian/
+    rsync.onFailure  = throw
+    rsync.onSuccess  = rm -r debian.upstream
+    rsync.run
+    rsync.free
 
   fi
 
