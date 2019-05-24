@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: uupdeb 67 2019-05-23 01:10:49+04:00 yds $
+# $Id: uupdeb 68 2019-05-24 19:02:16+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -37,7 +37,10 @@ updeb::main() {
 
   throw on NoSuchDir $pathSource
   [[ $sProject ]] || sProject=${pathSource##*/}
- 
+
+  cfg.set [path]source   = $pathSource
+  cfg.set     []project  = $sProject
+
   throw on NoSuchDir $pathBuilds
   cd $pathBuilds || error NotPermitted throw -- $pathBuilds
 
