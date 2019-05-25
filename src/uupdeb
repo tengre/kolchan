@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: uupdeb 68 2019-05-24 19:02:16+04:00 yds $
+# $Id: uupdeb 70 2019-05-25 10:15:32+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -15,10 +15,10 @@ updeb::main() {
   throw on CommandNotFound bc git grep head ls mv uupdate tail tar tr xargs
 
   local -a a
-  local fn fnConfig i iBuildNumber pathBuilds pathSource s sBaseBuild sBuildVersion sProject sVersion 
+  local fn fnConfig i iBuildNumber pathBuilds pathSource s sBaseBuild sBuildVersion sProject sVersion
 
   CFG cfg
-  cfg.bind.cli path-source{s}: project{p}: path-builds{b}: basebuild{B}: config{c}:
+  cfg.bind.cli path-source{s}: project{p}: path-builds{b}: basebuild{B}: config{c}: version{V}:
   fnConfig=$( cfg.getopt config ) || fnConfig=$( cfg.storage.use && cfg.storage.show )
   cfg.storage.use $fnConfig
   err::debug 0 project configuration $( cfg.storage.show )
@@ -65,7 +65,8 @@ updeb::main() {
 
   fi
 
-  #sVersion=$( git tag -l --sort=version:refname | tail -n 1 )
+  sVersion=$( cfg.get []version )
+  [[ $sVersion =~ git.*tag ]] && sVersion=$( git tag -l --sort=version:refname | tail -n 1 )
   if [[ ! $sVersion ]]; then
 
     if   [[ -s VERSION ]]; then
@@ -96,13 +97,13 @@ updeb::main() {
   fi
 
   SYS::RSYNC rsync
-  rsync.title      = "prepare target $sBuildVersion from ${sBaseBuild}:" 
+  rsync.title      = "prepare target $sBuildVersion from ${sBaseBuild}"
   rsync.options    = -aCrv
   rsync.pathSource = ${pathSource}/
   rsync.pathTarget = ${pathBuilds}/${sBuildVersion}
   rsync.onFailure  = throw
   rsync.run
-  
+
   err::debug 0 "prepare build $sBuildVersion"
   tar cfz ${sBuildVersion}.tar.gz $sBuildVersion || error NotExistNotCreated throw "${sBuildVersion}.tar.gz"
 
@@ -141,7 +142,7 @@ updeb::main() {
   cfg.save
   cfg.free
 
-  if (( i == 0 )); then 
+  if (( i == 0 )); then
     return 0
   else
     cd $pathBuilds && rm -rf $s

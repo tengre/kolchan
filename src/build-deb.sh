@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: build-deb.sh 69 2019-05-25 08:36:21+04:00 yds $
+# $Id: build-deb.sh 70 2019-05-25 10:15:32+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -50,7 +50,7 @@ buildpackage::main() {
   cd $pathTarget || error NotPermitted throw -- $pathTarget
 
   if [[ -d debian.upstream && -d debian ]]; then
-  
+
     SYS::RSYNC rsync
     rsync.title      = 'merge debian.upstream with debian'
     rsync.options    = -arv --exclude changelog
@@ -89,7 +89,7 @@ buildpackage::main() {
     err::debug 2 UNRELEASED tag not found on debian/changelog
 
   fi
-  
+
   #
   # TODO split buildinfo to the 'binary' and 'source' sections (or 'mode' option)
   #
@@ -99,19 +99,19 @@ buildpackage::main() {
   while read; do
 
   if   [[ $REPLY =~ dpkg-genchanges.--build=(source|any|all|binary|full).\>../(.*)$ ]]; then
-    cfg.set [buildinfo]${BASH_REMATCH[1]} = ${BASH_REMATCH[2]}
+    cfg.set [$sMode]${BASH_REMATCH[1]} = ${BASH_REMATCH[2]}
   elif [[ $REPLY =~ dpkg-deb:.building.package.*in.*../(.*\.deb) ]]; then
-    cfg.set [buildinfo]package = ${BASH_REMATCH[1]}
+    cfg.set [$sMode]package = ${BASH_REMATCH[1]}
   elif [[ $REPLY =~ ^return.code:.(.*)$ ]]; then
-    cfg.set [buildinfo]status = ${BASH_REMATCH[1]}
-    if [[ $( cfg.get [buildinfo]status ) != '0' ]]; then
+    cfg.set [$sMode]status = ${BASH_REMATCH[1]}
+    if [[ $( cfg.get [$sMode]status ) != '0' ]]; then
       echo "fail.."
       err::debug 0 stderr:
       cat $fn 1>&2
     else
       echo "ok!"
     fi
-    cfg.set [buildinfo]timestamp = $( std::date %s )
+    cfg.set [$sMode]timestamp = $( std::date %s )
   else
     echo $REPLY >> $fn
     echo -n '.'
@@ -119,7 +119,7 @@ buildpackage::main() {
 
   done< <( LC_ALL=C dpkg-buildpackage --build=$sMode -rfakeroot 2>&1; echo "return code: $?" )
 
-  err::debug 0 buildinfo:
+  err::debug 0 build states:
   cfg.show
   cfg.save
   cfg.free
