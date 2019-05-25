@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: automake.sh 55 2019-05-08 10:25:20+04:00 yds $
+# $Id: automake.sh 69 2019-05-25 08:32:57+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=devtools . bashlyk
 #
@@ -12,6 +12,10 @@ automake::main() {
   throw on CommandNotFound autoscan autoheader aclocal autoconf autoreconf automake cat cut grep mv pwd robodoc head tr touch sed xargs
 
   local fn sPackage sVersion sAuthor pathWork
+  
+  #
+  # TODO add package name by CLI
+  #
 
   : ${sVersion:=0.1}
 

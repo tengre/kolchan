@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: build-deb.sh 67 2019-05-23 01:10:49+04:00 yds $
+# $Id: build-deb.sh 69 2019-05-25 08:36:21+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -52,8 +52,8 @@ buildpackage::main() {
   if [[ -d debian.upstream && -d debian ]]; then
   
     SYS::RSYNC rsync
-    rsync.title = 'merge debian.upstream with debian:'
-    rsync.options = -arv --exclude changelog
+    rsync.title      = 'merge debian.upstream with debian'
+    rsync.options    = -arv --exclude changelog
     rsync.pathSource = debian.upstream/
     rsync.pathTarget = debian/
     rsync.onFailure  = throw
@@ -89,6 +89,10 @@ buildpackage::main() {
     err::debug 2 UNRELEASED tag not found on debian/changelog
 
   fi
+  
+  #
+  # TODO split buildinfo to the 'binary' and 'source' sections (or 'mode' option)
+  #
 
   std::temp fn
   echo -n "start building:"
