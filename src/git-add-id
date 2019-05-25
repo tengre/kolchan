@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 #
 #
-_bashlyk_log=nouse _bashlyk=devtools . bashlyk
+_bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
 #
 #
-eval "__aId=( $Id: git-add-id 55 2019-05-08 10:24:06+04:00 yds $ )"
+eval "__aId=( $Id: git-add-id 71 2019-05-25 10:45:20+04:00 yds $ )"
 #
 #
 #
-git::usage() {
+kolchan::git-add-id::usage() {
 
   local rc=$?
 
@@ -19,7 +19,7 @@ git::usage() {
             "${__aId[3]}"                                                      \
             "2016-$(date +%Y)"
 
-#****h* devtools/git-add-id
+#****h* kolchan/git-add-id
 	cat <<-EOF | tr -d '#'
 #  DESCRIPTION
 #    Easy way to emulate SVN keywords. Currently, compound keyword "Id"  handled
@@ -54,9 +54,9 @@ git::usage() {
 
 }
 #******
-#****f* devtools/git::add
+#****f* kolchan/gitAddFile
 #  USAGE
-#    git::add <revision> <file>
+#    gitAddFile <revision> <file>
 #  DESCRIPTION
 #    modify existing in the <file> keyword "Id" with <revision> and add this
 #    file to the git index
@@ -67,7 +67,7 @@ git::usage() {
 #    NoSuchFileOrDir - <file> not found
 #    InvalidArgument - <file> is directory
 #  SOURCE
-git::add() {
+gitAddFile() {
 
   local fmt fn ic ts ui s
 
@@ -111,15 +111,16 @@ git::add() {
 
 }
 #******
-git::main() {
+kolchan::git-add-id::main() {
 
   throw on CommandNotFound bc date git grep id sed xargs
 
   local bIndexed i tsIndexed s
 
+  ## TODO use CLI options
   eval set -- "$( _ sArg )"
 
-  [[ $1 =~ ^--?h ]] && git::usage
+  [[ $1 =~ ^--?h ]] && kolchan::git-add-id::usage
 
   git status >/dev/null 2>&1
 
@@ -159,7 +160,7 @@ git::main() {
 
     for s in "$@"; do
 
-      git::add $i "$s"
+      gitAddFile $i "$s"
 
     done
 
@@ -169,7 +170,7 @@ git::main() {
 
       if   [[ $s =~ ^@@ ]]; then
 
-        git::add $i "${s#@@*}"
+        gitAddFile $i "${s#@@*}"
 
       elif [[ $s =~ ^M[^M][[:space:]](.*)$ ]]; then
 
@@ -198,5 +199,5 @@ git::main() {
 #
 #
 #
-git::main
+kolchan::git-add-id::main
 #

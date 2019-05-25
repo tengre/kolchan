@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 #
-# $Id: automake.sh 69 2019-05-25 08:32:57+04:00 yds $
+# $Id: kolchan-automake 71 2019-05-25 11:05:29+04:00 yds $
 #
-_bashlyk_log=nouse _bashlyk=devtools . bashlyk
+_bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
 #
 #
-automake::main() {
+kolchan-automake::main() {
 
   throw on NoSuchFile ChangeLog
   throw on CommandNotFound autoscan autoheader aclocal autoconf autoreconf automake cat cut grep mv pwd robodoc head tr touch sed xargs
 
   local fn sPackage sVersion sAuthor pathWork
-  
+
   #
   # TODO add package name by CLI
   #
@@ -55,5 +55,5 @@ automake::main() {
 #
 #
 #
-automake::main
+kolchan-automake::main
 #

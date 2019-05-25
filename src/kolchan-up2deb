@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: uupdeb 70 2019-05-25 10:15:32+04:00 yds $
+# $Id: kolchan-up2deb 71 2019-05-25 11:05:29+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -10,7 +10,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
 #
 #
-updeb::main() {
+kolchan-up2deb::main() {
 
   throw on CommandNotFound bc git grep head ls mv uupdate tail tar tr xargs
 
@@ -153,5 +153,5 @@ updeb::main() {
 #
 #
 #
-updeb::main
+kolchan-up2deb::main
 #
