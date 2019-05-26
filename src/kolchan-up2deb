@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: kolchan-up2deb 71 2019-05-25 11:05:29+04:00 yds $
+# $Id: kolchan-up2deb 72 2019-05-26 17:21:11+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -45,10 +45,6 @@ kolchan-up2deb::main() {
   cd $pathBuilds || error NotPermitted throw -- $pathBuilds
 
   rm -rf *.orig
-
-  [[ $sBaseBuild ]] || sBaseBuild=$( ls -td1 --group-directories-first ${sProject}* | head -n 1 )
-
-  throw on NoSuchDir ${pathBuilds}/${sBaseBuild}
 
   err::debug 0 "source project $sProject"
 
@@ -107,35 +103,47 @@ kolchan-up2deb::main() {
   err::debug 0 "prepare build $sBuildVersion"
   tar cfz ${sBuildVersion}.tar.gz $sBuildVersion || error NotExistNotCreated throw "${sBuildVersion}.tar.gz"
 
-  rm -rf $sBuildVersion
+  if [[ $sBaseBuild =~ ^(init|0)$ ]]; then
 
-  err::debug 0 "build path $pathBuilds :: prev build $sBaseBuild"
-  throw on NoSuchDir ${pathBuilds}/${sBaseBuild}
-  cd $sBaseBuild || error NotPermitted throw "${pathBuilds}/${sBaseBuild}"
+    err::debug 0 "initial build :: path ${pathBuilds}/${sBuildVersion}"
+    cd $sBuildVersion || error NotPermitted throw "${pathBuilds}/${sBuildVersion}"
+    dh_make -s -l gpl --file ../${sBuildVersion}.tar.gz
+    cfg.set [dh_make]status    = $?
+    cfg.set [dh_make]timestamp = $( std::date %s )
 
-  std::temp fn
-  echo -n "start uupdate:"
+  else
 
-  while read; do
-    if [[ $REPLY =~ ^return.code:.(.*)$ ]]; then
-      cfg.set [uupdate]status = ${BASH_REMATCH[1]}
-      if [[ $( cfg.get [uupdate]status ) != '0' ]]; then
-        echo "fail.."
-        err::debug 0 stderr:
-        cat $fn 1>&2
-        i=1
+    rm -rf $sBuildVersion
+    [[ $sBaseBuild ]] || sBaseBuild=$( ls -td1 --group-directories-first ${sProject}* | head -n 1 )
+    throw on NoSuchDir ${pathBuilds}/${sBaseBuild}
+    err::debug 0 "build path $pathBuilds :: prev build $sBaseBuild"
+    cd $sBaseBuild || error NotPermitted throw "${pathBuilds}/${sBaseBuild}"
+
+    std::temp fn
+    echo -n "start uupdate:"
+
+    while read; do
+      if [[ $REPLY =~ ^return.code:.(.*)$ ]]; then
+        cfg.set [uupdate]status = ${BASH_REMATCH[1]}
+        if [[ $( cfg.get [uupdate]status ) != '0' ]]; then
+          echo "fail.."
+          err::debug 0 stderr:
+          cat $fn 1>&2
+          i=1
+        else
+          echo "ok!"
+          echo "target path ${pathBuilds}/${sBuildVersion}"
+          cfg.set [path]target = ${pathBuilds}/${sBuildVersion}
+          i=0
+        fi
+        cfg.set [uupdate]timestamp = $( std::date %s )
       else
-        echo "ok!"
-        echo "target path ${pathBuilds}/${sBuildVersion}"
-        cfg.set [path]target = ${pathBuilds}/${sBuildVersion}
-        i=0
+        echo $REPLY > $fn
+        echo -n '.'
       fi
-      cfg.set [uupdate]timestamp = $( std::date %s )
-    else
-      echo $REPLY > $fn
-      echo -n '.'
-    fi
-  done< <( LC_ALL=C uupdate ${sBuildVersion}.tar.gz 2>&1; echo "return code: $?" )
+    done< <( LC_ALL=C uupdate ${sBuildVersion}.tar.gz 2>&1; echo "return code: $?" )
+
+  fi
 
   err::debug 0 status of the preparation target $s from $sBaseBuild:
   cfg.show
