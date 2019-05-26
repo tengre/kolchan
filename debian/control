@@ -1,0 +1,22 @@
+Source: kolchan
+Section: devel
+Priority: optional
+Maintainer: Damir Sh. Yakupov <yds@bk.ru>
+Build-Depends: debhelper (>= 10), autotools-dev
+Standards-Version: 4.1.2
+Homepage: https://github.com/tengre/kolchan/
+#Vcs-Git: https://anonscm.debian.org/git/collab-maint/kolchan.git
+#Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/kolchan.git
+
+Package: kolchan
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: set of bash(lyk) scripts for development and build packages
+ package included next tools:
+ - git-add-id - wrapper for 'git add <file[s]>' with svn keyword '$Id$'
+   support
+ - kolchan-automake - prepare project source tree with autotools
+   support
+ - kolchan-builddeb - wrapper for dpkg-buildpackage
+ - kolchan-up2deb   - wrapper for uupdate and dh_make
+ 

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: kolchan-up2deb 72 2019-05-26 17:21:11+04:00 yds $
+# $Id: kolchan-up2deb 73 2019-05-26 18:31:22+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -107,9 +107,10 @@ kolchan-up2deb::main() {
 
     err::debug 0 "initial build :: path ${pathBuilds}/${sBuildVersion}"
     cd $sBuildVersion || error NotPermitted throw "${pathBuilds}/${sBuildVersion}"
-    dh_make -s -l gpl --file ../${sBuildVersion}.tar.gz
+    dh_make -s -c gpl --file ../${sBuildVersion}.tar.gz
     cfg.set [dh_make]status    = $?
     cfg.set [dh_make]timestamp = $( std::date %s )
+    cfg.set [path]target       = ${pathBuilds}/${sBuildVersion}
 
   else
 
