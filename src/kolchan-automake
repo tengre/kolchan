@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-automake 81 2019-05-27 18:51:49+04:00 yds $
+# $Id: kolchan-automake 82 2019-05-28 00:50:12+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
@@ -9,7 +9,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-automake::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-automake 81 2019-05-27 18:51:49+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-automake 82 2019-05-28 00:50:12+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -20,20 +20,24 @@ kolchan-automake::usage() {
 #****h* kolchan/kolchan-automake
 	cat <<-EOF | tr -d '#'
 #  DESCRIPTION
-#    prepare project source tree with autotools support. 
+#    Preparing project source tree with autotools support. Makefile.am for each
+#    compiled folder requred, for root of the project 'ChangeLog' file required
+#    This git oriented tool be invoked within a directory containing the source
+#    code.
 #  USAGE
 #    kolchan-automake <options>
 #  ARGUMENTS
 #    -h, --help               - show this usage and exit
 #    -p, --project <name>     - set project name
 #    -v, --verbosity <number> - set DEBUGLEVEL for debug messages
+#    -V, --version ...        - set version
 #  USES
 #    bashlyk >= 1.94
 #  AUTHOR
 #    Damir Sh. Yakupov <yds@bk.ru>
 #  EXAMPLE
 #
-#    kolchan-automake -p test
+#    kolchan-automake --project test --version 1.23
 #
 	EOF
 
@@ -49,45 +53,49 @@ kolchan-automake::main() {
   throw on NoSuchFile ChangeLog
   throw on CommandNotFound autoscan autoheader aclocal autoconf autoreconf automake cat cut grep mv pwd robodoc head tr touch sed xargs
 
-  local fn sPackage sVersion sAuthor pathWork
+  local fn pathWork sAuthor sProject sVersion
 
   #
   # TODO add package name by CLI
   #
   CFG cfg
-  cfg.bind.cli help{h} project{p}: verbosity{v}: 
-  
+  cfg.bind.cli help{h} project{p}: verbosity{v}: version{V}:
+
   [[ $( cfg.getopt help ) ]] && kolchan-automake::usage
-  
+
+  pathWork="$( pwd )"
+
   DEBUGLEVEL=$( cfg.getopt verbosity )
   std::isNumber $DEBUGLEVEL || DEBUGLEVEL=1
 
-  : ${sVersion:=0.1}
+  sVersion=$( cfg.getopt version )
+  sProject=$( cfg.getopt project )
 
   errorify on CommandNotFound git && : ${sAuthor:="$( git config --get user.name ) <$( git config --get user.email )>"}
 
   : ${sAuthor:="${DEBFULLNAME:-$USER} <${DEBEMAIL:-$USER@localhost.localdomain}>"}
 
-  pathWork="$( pwd )"
-
   [[ -s AUTHORS ]] || echo "$sAuthor" > AUTHORS
 
   for fn in NEWS README TODO; do [[ -f $fn ]] || touch $fn; done
 
-  sPackage=${pathWork##*/}
-  sPackage=${sPackage/-$sVersion/}
-  sVersion=$(grep -i version ChangeLog | head -n 1 | xargs | cut -f 2 -d' ')
-  : ${sVersion:=0.001}
+  #sProject=${sProject/-$sVersion/}
+  : ${sProject:=${pathWork##*/}}
+  : ${sVersion:=$(grep -i version ChangeLog | head -n 1 | xargs | cut -f 2 -d' ')}
+
+  throw on EmptyVariable sVersion
+
+  err::debug 2 project info: name=$sProject version=$sVersion
 
   sEmail="$(grep -o -E '<.*>' AUTHORS | tr -d '<|>' | head -n 1)"
 
   cfg.free
-  
+
   autoscan
   mv configure.scan configure.ac || throw on NoSuchFile configure.ac
 
   autoheader
-  sed -i -e "s/AC_INIT.*/AC_INIT(${sPackage}, ${sVersion}, ${sEmail})\nAM_INIT_AUTOMAKE/ig" configure.ac
+  sed -i -e "s/AC_INIT.*/AC_INIT(${sProject}, ${sVersion}, ${sEmail})\nAM_INIT_AUTOMAKE/ig" configure.ac
 
   aclocal
   autoconf
