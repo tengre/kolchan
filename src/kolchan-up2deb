@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: kolchan-up2deb 77 2019-05-27 15:58:36+04:00 yds $
+# $Id: kolchan-up2deb 79 2019-05-27 17:20:44+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-up2deb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-up2deb 77 2019-05-27 15:58:36+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-up2deb 79 2019-05-27 17:20:44+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -163,6 +163,8 @@ kolchan-up2deb::main() {
 
   [[ $sBaseBuild ]] || sBaseBuild=$( ls -td1 --group-directories-first ${sProject}* | head -n 1 )
   [[ $sBaseBuild ]] || sBaseBuild=init
+  
+  err::debug 2 "base build: $sBaseBuild"
 
   if [[ $sBaseBuild =~ ^(init|0)$ ]]; then
 

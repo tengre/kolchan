@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-automake 71 2019-05-25 11:05:29+04:00 yds $
+# $Id: kolchan-automake 78 2019-05-27 16:28:37+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
@@ -16,6 +16,8 @@ kolchan-automake::main() {
   #
   # TODO add package name by CLI
   #
+  CFG cfg
+  cfg.bind.cli help{h}
 
   : ${sVersion:=0.1}
 
@@ -36,6 +38,8 @@ kolchan-automake::main() {
 
   sEmail="$(grep -o -E '<.*>' AUTHORS | tr -d '<|>' | head -n 1)"
 
+  cfg.free
+  
   autoscan
   mv configure.scan configure.ac || throw on NoSuchFile configure.ac
 
