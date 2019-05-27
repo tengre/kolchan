@@ -1,8 +1,46 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-automake 78 2019-05-27 16:28:37+04:00 yds $
+# $Id: kolchan-automake 81 2019-05-27 18:51:49+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
+#
+#
+#
+kolchan-automake::usage() {
+
+  local rc=$? aId
+  eval "aId=( $Id: kolchan-automake 81 2019-05-27 18:51:49+04:00 yds $ )"
+
+  printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
+            "${0##*/}"                                                         \
+            "rev${aId[2]}"                                                     \
+            "${aId[3]}"                                                        \
+            "2016-$(date +%Y)"
+
+#****h* kolchan/kolchan-automake
+	cat <<-EOF | tr -d '#'
+#  DESCRIPTION
+#    prepare project source tree with autotools support. 
+#  USAGE
+#    kolchan-automake <options>
+#  ARGUMENTS
+#    -h, --help               - show this usage and exit
+#    -p, --project <name>     - set project name
+#    -v, --verbosity <number> - set DEBUGLEVEL for debug messages
+#  USES
+#    bashlyk >= 1.94
+#  AUTHOR
+#    Damir Sh. Yakupov <yds@bk.ru>
+#  EXAMPLE
+#
+#    kolchan-automake -p test
+#
+	EOF
+
+  exit $rc
+
+}
+#******
 #
 #
 #
@@ -17,7 +55,12 @@ kolchan-automake::main() {
   # TODO add package name by CLI
   #
   CFG cfg
-  cfg.bind.cli help{h}
+  cfg.bind.cli help{h} project{p}: verbosity{v}: 
+  
+  [[ $( cfg.getopt help ) ]] && kolchan-automake::usage
+  
+  DEBUGLEVEL=$( cfg.getopt verbosity )
+  std::isNumber $DEBUGLEVEL || DEBUGLEVEL=1
 
   : ${sVersion:=0.1}
 
