@@ -5,7 +5,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
 #
 #
-eval "__aId=( $Id: git-add-id 71 2019-05-25 10:45:20+04:00 yds $ )"
+eval "__aId=( $Id: git-add-id 77 2019-05-27 15:58:36+04:00 yds $ )"
 #
 #
 #
@@ -37,7 +37,7 @@ kolchan::git-add-id::usage() {
 #                 The default (no arguments) - added only modified files, which
 #                 are already included to the git repository.
 #  USES
-#    bashlyk >= 1.93
+#    bashlyk >= 1.94
 #  AUTHOR
 #    Damir Sh. Yakupov <yds@bk.ru>
 #  EXAMPLE
