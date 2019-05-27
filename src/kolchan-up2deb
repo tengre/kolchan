@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: kolchan-up2deb 74 2019-05-26 18:49:54+04:00 yds $
+# $Id: kolchan-up2deb 76 2019-05-27 07:02:26+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -19,6 +19,7 @@ kolchan-up2deb::main() {
 
   CFG cfg
   cfg.bind.cli path-source{s}: project{p}: path-builds{b}: basebuild{B}: config{c}: version{V}:
+
   fnConfig=$( cfg.getopt config ) || fnConfig=$( cfg.storage.use && cfg.storage.show )
   cfg.storage.use $fnConfig
   err::debug 0 project configuration $( cfg.storage.show )
@@ -114,6 +115,7 @@ kolchan-up2deb::main() {
     cfg.set [dh_make]status    = $?
     cfg.set [dh_make]timestamp = $( std::date %s )
     cfg.set [path]target       = ${pathBuilds}/${sBuildVersion}
+    [[ $( cfg.get [dh_make]status ) != '0' ]] && cfg.set []basebuild = auto
 
   else
 

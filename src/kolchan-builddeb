@@ -1,17 +1,62 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-builddeb 71 2019-05-25 11:05:29+04:00 yds $
+# $Id: kolchan-builddeb 76 2019-05-27 07:02:26+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
 : ${_kolchan_pathLib:=/usr/share/kolchan}
 
-. ${_kolchan_pathLib}/libsys.sh || throw
+. ${_kolchan_pathLib}/libsys.sh || error NoSuchFile throw -- libsys.sh
+
+kolchan-builddeb::usage() {
+
+  local rc=$? aId
+  eval "aId=( $Id: kolchan-builddeb 76 2019-05-27 07:02:26+04:00 yds $ )"
+
+  printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
+            "${0##*/}"                                                         \
+            "rev${aId[2]}"                                                     \
+            "${aId[3]}"                                                        \
+            "2016-$(date +%Y)"
+
+#****h* kolchan/kolchan-builddeb
+	cat <<-EOF | tr -d '#'
+#  DESCRIPTION
+#    Easy  way  to  build  debian  package.  Wrapper for dpkg-buildpackage, used
+#    shared with other packaging tools configuration. This useful for automation
+#    build process - jenkins pipelines and other CI.
+#  USAGE
+#    kolchan-builddeb <options>
+#  ARGUMENTS
+#    -h, --help               - show this usage and exit
+#    -m, --mode binary|source - select  source  or  binary  packaging.  Required
+#    -s, --path-source <path> - select source tree root path. May  be  read from
+#                               config. Default - ~/src
+#    -t, --path-target <path> - select package tree root path. May  be read from
+#                               config. Default - ~/builds
+#    -p, --project <name>     - set project name
+#    -c, --config <file>      - configuration  file for share build data between
+#                               building tools
+#    -v, --verbosity <number> - set DEBUGLEVEL for debug messages
+#  USES
+#    bashlyk >= 1.94
+#  AUTHOR
+#    Damir Sh. Yakupov <yds@bk.ru>
+#  EXAMPLE
+#
+#    kolchan-builddeb -p test -c test.project.cfg
+#
+	EOF
+
+  exit $rc
+
+}
+#******
+
 
 #
 #
 #
-: ${DEBUGLEVEL:=2}
 
 kolchan-builddeb::main() {
 
@@ -21,10 +66,16 @@ kolchan-builddeb::main() {
   local -a
 
   CFG cfg
-  cfg.bind.cli mode{m}: path-source{s}: path-target{t}: config{c}:
+  cfg.bind.cli mode{m}: path-source{s}: path-target{t}: config{c}: project{p}: verbosity{v}: help{h}
+
+  [[ $( cfg.getopt help ) ]] && kolchan-builddeb::usage
+
+  DEBUGLEVEL=$( cfg.getopt verbosity )
+  std::isNumber $DEBUGLEVEL || DEBUGLEVEL=1
+
   fnConfig=$( cfg.getopt config ) || fnConfig=$( cfg.storage.use && cfg.storage.show )
   cfg.storage.use $fnConfig
-  err::debug 0 project configuration $( cfg.storage.show )
+  err::debug 1 project configuration $( cfg.storage.show )
   cfg.load
 
        sMode="$( cfg.get     []mode    )" ||      sMode='binary'
@@ -52,7 +103,7 @@ kolchan-builddeb::main() {
   if [[ -d debian.upstream && -d debian ]]; then
 
     SYS::RSYNC rsync
-    rsync.title      = 'merge debian.upstream with debian'
+    rsync.title      = merge debian.upstream with debian
     rsync.options    = -arv --exclude changelog
     rsync.pathSource = debian.upstream/
     rsync.pathTarget = debian/
@@ -106,7 +157,7 @@ kolchan-builddeb::main() {
     cfg.set [$sMode]status = ${BASH_REMATCH[1]}
     if [[ $( cfg.get [$sMode]status ) != '0' ]]; then
       echo "fail.."
-      err::debug 0 stderr:
+      err::debug 1 stderr:
       cat $fn 1>&2
     else
       echo "ok!"
@@ -119,7 +170,7 @@ kolchan-builddeb::main() {
 
   done< <( LC_ALL=C dpkg-buildpackage --build=$sMode -rfakeroot 2>&1; echo "return code: $?" )
 
-  err::debug 0 build states:
+  err::debug 1 build states:
   cfg.show
   cfg.save
   cfg.free
