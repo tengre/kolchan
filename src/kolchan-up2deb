@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: kolchan-up2deb 80 2019-05-27 17:57:32+04:00 yds $
+# $Id: kolchan-up2deb 85 2019-05-29 00:25:51+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-up2deb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-up2deb 80 2019-05-27 17:57:32+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-up2deb 85 2019-05-29 00:25:51+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -23,8 +23,8 @@ kolchan-up2deb::usage() {
 	cat <<-EOF | tr -d '#'
 #  DESCRIPTION
 #    Easy way to create or upgrade a source code debian package from an upstream
-#    revision. Wrapper for dh_make and uupdate, used shared with other packaging 
-#    tools  configuration. This  useful  for  automation build process - jenkins 
+#    revision. Wrapper for dh_make and uupdate, used shared with other packaging
+#    tools  configuration. This  useful  for  automation build process - jenkins
 #    pipelines and other CI.
 #  USAGE
 #    kolchan-up2deb <options>
@@ -37,13 +37,13 @@ kolchan-up2deb::usage() {
 #    -p, --project <name>     - set project name
 #    -c, --config <file>      - configuration  file for share build data between
 #                               building tools
-#    -B, --basebuild ...      - use this build version for upgrade.  May be used 
+#    -B, --basebuild ...      - use this build version for upgrade.  May be used
 #                               special keywords - 'init' -create package source
 #                               'auto' - try  get last build version from builds
 #                               folder ( see --path-target option )
 #    -v, --verbosity <number> - set DEBUGLEVEL for debug messages
-#    -V, --version            - set  version  for target package source. Special 
-#                               keyword  'git-tag'  enable  last tag from git as 
+#    -V, --version            - set  version  for target package source. Special
+#                               keyword  'git-tag'  enable  last tag from git as
 #                               version
 #  USES
 #    bashlyk >= 1.94
@@ -77,9 +77,31 @@ kolchan-up2deb::main() {
   DEBUGLEVEL=$( cfg.getopt verbosity )
   std::isNumber $DEBUGLEVEL || DEBUGLEVEL=1
 
-  fnConfig=$( cfg.getopt config ) || fnConfig=$( cfg.storage.use && cfg.storage.show )
-  cfg.storage.use $fnConfig
-  err::debug 1 project configuration $( cfg.storage.show )
+  fnConfig=$( cfg.getopt config  )
+  sProject=$( cfg.getopt project )
+
+  if   [[ ! $fnConfig && $sProject ]]; then
+
+    cfg.storage.use ${sProject}.project.cfg
+
+  elif [[ $fnConfig && -f $fnConfig ]]; then
+
+    cfg.storage.use $fnConfig
+
+  ## TODO remove '/' or set error
+  elif [[ $fnConfig ]]; then
+
+    cfg.storage.use ${fnConfig}.project.cfg
+
+  elif [[ ! $fnConfig && ! $sProject ]]; then
+
+    cfg.storage.use
+
+  fi
+
+  fnConfig=$( cfg.storage.show )
+
+  err::debug 1 project configuration $fnConfig
 
   cfg.load
 
@@ -163,7 +185,7 @@ kolchan-up2deb::main() {
 
   [[ $sBaseBuild ]] || sBaseBuild=$( ls -td1 --group-directories-first ${sProject}* | head -n 1 )
   [[ $sBaseBuild ]] || sBaseBuild=init
-  
+
   err::debug 2 "base build: $sBaseBuild"
 
   if [[ $sBaseBuild =~ ^(init|0)$ ]]; then
