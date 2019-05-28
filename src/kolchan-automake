@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-automake 82 2019-05-28 00:50:12+04:00 yds $
+# $Id: kolchan-automake 83 2019-05-28 18:59:32+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
@@ -9,7 +9,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-automake::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-automake 82 2019-05-28 00:50:12+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-automake 83 2019-05-28 18:59:32+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -59,9 +59,32 @@ kolchan-automake::main() {
   # TODO add package name by CLI
   #
   CFG cfg
-  cfg.bind.cli help{h} project{p}: verbosity{v}: version{V}:
+  cfg.bind.cli config{c}: help{h} project{p}: verbosity{v}: version{V}:
 
-  [[ $( cfg.getopt help ) ]] && kolchan-automake::usage
+  [[ $( cfg.getopt help   ) ]] && kolchan-automake::usage
+  fnConfig=$( cfg.getopt config  )
+  sProject=$( cfg.getopt project )
+
+  if   [[ ! $fnConfig && $sProject ]]; then
+
+    cfg.storage.use ${sProject}.project.cfg
+
+  elif [[ $fnConfig && -f $fnConfig ]]; then
+
+    cfg.storage.use $fnConfig
+
+  ## TODO remove '/' or set error
+  elif [[ $fnConfig ]]; then
+
+    cfg.storage.use ${fnConfig}.project.cfg
+
+  elif [[ ! $fnConfig && ! $sProject ]]; then
+
+    cfg.storage.use
+
+  fi
+
+  fnConfig=$( cfg.storage.show )
 
   pathWork="$( pwd )"
 
@@ -69,7 +92,6 @@ kolchan-automake::main() {
   std::isNumber $DEBUGLEVEL || DEBUGLEVEL=1
 
   sVersion=$( cfg.getopt version )
-  sProject=$( cfg.getopt project )
 
   errorify on CommandNotFound git && : ${sAuthor:="$( git config --get user.name ) <$( git config --get user.email )>"}
 
