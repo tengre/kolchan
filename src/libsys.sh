@@ -1,7 +1,7 @@
 #
-# $Id: libsys.sh 66 2019-05-22 01:27:49+04:00 yds $
+# $Id: libsys.sh 87 2019-05-29 00:45:42+04:00 yds $
 #
-#****h* BASHLYK/libsys
+#****h* kolchan/libsys
 #  DESCRIPTION
 #    OOP style wrappers for various system commands:
 #    SYS::RSYNC - support for rsync
@@ -87,7 +87,7 @@ declare -rg _bashlyk_methods_sys_rsync='
 #  DESCRIPTION
 #    constructor for new instance <id> of the SYS::RSYNC "class" (object)
 #  NOTES
-#    constructor 
+#    constructor
 #  ARGUMENTS
 #    valid variable name for created instance, default - used class name RSYNC as
 #    instance
@@ -175,12 +175,12 @@ SYS::RSYNC::free() {
 #
 #    title       - title message
 #    options     - rsync options
-#    pathSource  - source 
+#    pathSource  - source
 #    pathTarget  - destination
 #    truncateLog - max error lines to show
 #    debugLevel  - debug level
 #    onFailure   - run command on rsync fail
-#    onSuccess   - run command on rsync success 
+#    onSuccess   - run command on rsync success
 #    fileLog     - name of a temporary file to save rsync stdout (may be readonly)
 #  EXAMPLE
 #    SYS::RSYNC tSettings
@@ -199,7 +199,7 @@ SYS::RSYNC::settings() {
 
   local o=${FUNCNAME[0]%%.*} f=${FUNCNAME[0]#*.}
   [[ $* ]] && ${o}_settings.set $f $* || ${o}_settings.get $f
-  
+
 }
 #******
 #****e* libsys/SYS::RSYNC::run
@@ -241,7 +241,7 @@ SYS::RSYNC::run() {
   std::temp fnRC
   std::temp fnStd
   ${o}.fileLog = $fnStd
-  
+
   while read; do
 
     err::debugf $V '%s' '.'
@@ -269,23 +269,23 @@ SYS::RSYNC::run() {
 
     _bashlyk_hError[$rc]="${_rsync_hError[$rc]}"
     s="$( ${o}.onFailure )"
-    
+
     if [[ $s =~ ^(echo|warn|return|echo\+return|warn\+return|exit|echo\+exit|warn\+exit|throw)$ ]]; then
-    
+
       error $rc $s -- rsync: $( ${o}.pathSource ) - $( ${o}.pathTarget )
-      
-    else 
-    
+
+    else
+
       [[ $s ]] && eval "$s"
-      
+
     fi
-    
+
     return $rc
 
   else
 
     err::debug $V 'ok!'
-    s="$( ${o}.onSuccess )" && eval "$s" 
+    s="$( ${o}.onSuccess )" && eval "$s"
     return 0
 
   fi
