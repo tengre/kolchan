@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-builddeb 76 2019-05-27 07:02:26+04:00 yds $
+# $Id: kolchan-builddeb 86 2019-05-29 00:31:31+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-builddeb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-builddeb 76 2019-05-27 07:02:26+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-builddeb 86 2019-05-29 00:31:31+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -73,12 +73,35 @@ kolchan-builddeb::main() {
   DEBUGLEVEL=$( cfg.getopt verbosity )
   std::isNumber $DEBUGLEVEL || DEBUGLEVEL=1
 
-  fnConfig=$( cfg.getopt config ) || fnConfig=$( cfg.storage.use && cfg.storage.show )
-  cfg.storage.use $fnConfig
-  err::debug 1 project configuration $( cfg.storage.show )
+  fnConfig=$( cfg.getopt config  )
+  sProject=$( cfg.getopt project )
+
+  if   [[ ! $fnConfig && $sProject ]]; then
+
+    cfg.storage.use ${sProject}.project.cfg
+
+  elif [[ $fnConfig && -f $fnConfig ]]; then
+
+    cfg.storage.use $fnConfig
+
+  ## TODO remove '/' or set error
+  elif [[ $fnConfig ]]; then
+
+    cfg.storage.use ${fnConfig}.project.cfg
+
+  elif [[ ! $fnConfig && ! $sProject ]]; then
+
+    cfg.storage.use
+
+  fi
+
+  fnConfig=$( cfg.storage.show )
+
+  err::debug 1 project configuration $fnConfig
+
   cfg.load
 
-       sMode="$( cfg.get     []mode    )" ||      sMode='binary'
+       sMode="$( cfg.get     []mode    )" ||      sMode='all'
     sProject="$( cfg.get     []project )" ||   sProject=$PROJECT
   pathSource="$( cfg.get [path]source  )" || pathSource=~/src
 
