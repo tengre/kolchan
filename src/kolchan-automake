@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-automake 83 2019-05-28 18:59:32+04:00 yds $
+# $Id: kolchan-automake 84 2019-05-28 23:27:51+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
@@ -9,13 +9,13 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-automake::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-automake 83 2019-05-28 18:59:32+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-automake 84 2019-05-28 23:27:51+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
             "rev${aId[2]}"                                                     \
             "${aId[3]}"                                                        \
-            "2016-$(date +%Y)"
+            "2016-$(std::date %Y)"
 
 #****h* kolchan/kolchan-automake
 	cat <<-EOF | tr -d '#'
@@ -86,12 +86,14 @@ kolchan-automake::main() {
 
   fnConfig=$( cfg.storage.show )
 
+  cfg.load
+
   pathWork="$( pwd )"
 
-  DEBUGLEVEL=$( cfg.getopt verbosity )
+  DEBUGLEVEL=$( cfg.get verbosity )
   std::isNumber $DEBUGLEVEL || DEBUGLEVEL=1
 
-  sVersion=$( cfg.getopt version )
+  sVersion=$( cfg.get version )
 
   errorify on CommandNotFound git && : ${sAuthor:="$( git config --get user.name ) <$( git config --get user.email )>"}
 
@@ -111,22 +113,50 @@ kolchan-automake::main() {
 
   sEmail="$(grep -o -E '<.*>' AUTHORS | tr -d '<|>' | head -n 1)"
 
-  cfg.free
+  cfg.set []version = $sVersion
+  cfg.set []project = $sProject
+  cfg.set []email   = $sEmail
+  cfg.set []author  = $sAuthor
+  cfg.save
+
 
   autoscan
+  cfg.set [autotools]autoscan = $?
   mv configure.scan configure.ac || throw on NoSuchFile configure.ac
 
   autoheader
+  cfg.set [autotools]autoheader = $?
+
   sed -i -e "s/AC_INIT.*/AC_INIT(${sProject}, ${sVersion}, ${sEmail})\nAM_INIT_AUTOMAKE/ig" configure.ac
 
   aclocal
+  cfg.set [autotools]aclocal = $?
+
   autoconf
+  cfg.set [autotools]autoconf = $?
   autoreconf
+  cfg.set [autotools]autoreconf = $?
   automake --add-missing --copy
+  cfg.set [autotools]automake = $?
 
   errorify on CommandNotFound git-add-id && git-add-id
 
-  throw on CommandNotFound ./configure make && ./configure --prefix=/usr && make
+  if errorify on CommandNotFound ./configure make; then
+
+    ./configure --prefix=/usr
+    rc=$?
+    cfg.set [autotools]configure = $rc
+    if (( rc == 0 )); then
+      make
+      cfg.set [autotools]make = $?
+    fi
+  else
+    cfg.set []Command not found = $( err::status.show )
+  fi
+  cfg.set [autotools]timestamp = $( std::date %s )
+  cfg.save
+  cfg.show
+  cfg.free
 
 }
 #
