@@ -1,5 +1,5 @@
 #
-# $Id: libsys.sh 87 2019-05-29 00:45:42+04:00 yds $
+# $Id: libsys.sh 89 2019-05-29 14:18:49+04:00 yds $
 #
 #****h* kolchan/libsys
 #  DESCRIPTION
@@ -232,10 +232,10 @@ SYS::RSYNC::run() {
   local -a a
 
   o=${FUNCNAME[0]%%.*}
-  V=$( ${o}.debugLevel )
   I=$( ${o}.truncateLog )
+  : ${DEBUGLEVEL:=$( ${o}.debugLevel )}
 
-  err::debug $V && printf -- '%s:>' "$( ${o}.title )"
+  err::debugf 1 '%s:>' "$( ${o}.title )"
 
   std::temp fnErr
   std::temp fnRC
@@ -244,7 +244,7 @@ SYS::RSYNC::run() {
 
   while read; do
 
-    err::debugf $V '%s' '.'
+    err::debugf 1 '%s' '.'
     echo "$REPLY" >> $fnStd
 
   done< <( rsync $( ${o}.options ) $( ${o}.pathSource ) $( ${o}.pathTarget ) 2>$fnErr; echo $? >$fnRC )
@@ -252,10 +252,10 @@ SYS::RSYNC::run() {
   rc=$( < $fnRC )
   if (( rc > 0 )); then
 
-    err::debug $V 'fail..'
+    err::debug 1 'fail..'
     a=( $( wc -l $fnErr ) )
 
-    (( ${a[0]} == 1 )) || err::debug $V 'warns:'
+    (( ${a[0]} == 1 )) || err::debug 1 'warns:'
 
     if (( ${a[0]} > I )); then
 
@@ -284,7 +284,7 @@ SYS::RSYNC::run() {
 
   else
 
-    err::debug $V 'ok!'
+    err::debug 1 'ok!'
     s="$( ${o}.onSuccess )" && eval "$s"
     return 0
 
