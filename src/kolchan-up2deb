@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: kolchan-up2deb 91 2019-05-29 18:50:39+04:00 yds $
+# $Id: kolchan-up2deb 94 2019-05-29 23:11:13+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-up2deb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-up2deb 91 2019-05-29 18:50:39+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-up2deb 94 2019-05-29 23:11:13+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -207,7 +207,7 @@ kolchan-up2deb::main() {
     cfg.set [dh_make]status    = $?
     cfg.set [dh_make]timestamp = $( std::date %s )
     cfg.set [path]target       = ${pathBuilds}/${sBuildVersion}
-    [[ $( cfg.get [dh_make]status ) != '0' ]] && cfg.set []basebuild = $sBuildVersion
+    [[ $( cfg.get [dh_make]status ) == '0' ]] && cfg.set []basebuild = $sBuildVersion
 
   else
 
