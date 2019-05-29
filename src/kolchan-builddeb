@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-builddeb 90 2019-05-29 18:11:57+04:00 yds $
+# $Id: kolchan-builddeb 91 2019-05-29 18:50:39+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-builddeb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-builddeb 90 2019-05-29 18:11:57+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-builddeb 91 2019-05-29 18:50:39+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -92,6 +92,7 @@ kolchan-builddeb::main() {
 
   elif [[ ! $fnConfig && ! $sProject ]]; then
 
+    ## TODO try use current directory here
     cfg.storage.use
 
   fi

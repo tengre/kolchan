@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-automake 90 2019-05-29 18:11:57+04:00 yds $
+# $Id: kolchan-automake 91 2019-05-29 18:50:38+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
@@ -9,7 +9,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-automake::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-automake 90 2019-05-29 18:11:57+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-automake 91 2019-05-29 18:50:38+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -83,6 +83,7 @@ kolchan-automake::main() {
 
   elif [[ ! $fnConfig && ! $sProject ]]; then
 
+    ## TODO try use current directory here
     cfg.storage.use
 
   fi
