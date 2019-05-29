@@ -1,12 +1,12 @@
 ##
-## $Id: Makefile.am 24 2017-02-17 15:34:47+04:00 toor $
+## $Id: Makefile.am 93 2019-05-29 22:29:27+04:00 yds $
 ##
 
 SUBDIRS = src doc
 DESTDIR =
 
-all:
-	$(shell) cp -f ChangeLog changelog
+changelog: ChangeLog
+	$(shell) cp ChangeLog changelog
 
 clean-local:
 	-rm -rf changelog
