@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-builddeb 86 2019-05-29 00:31:31+04:00 yds $
+# $Id: kolchan-builddeb 88 2019-05-29 12:54:57+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-builddeb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-builddeb 86 2019-05-29 00:31:31+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-builddeb 88 2019-05-29 12:54:57+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -29,7 +29,7 @@ kolchan-builddeb::usage() {
 #    kolchan-builddeb <options>
 #  ARGUMENTS
 #    -h, --help               - show this usage and exit
-#    -m, --mode binary|source - select  source  or  binary  packaging.  Required
+#    -m, --mode <mode>        - select source|any|all|binary|full mode. Required
 #    -s, --path-source <path> - select source tree root path. May  be  read from
 #                               config. Default - ~/src
 #    -t, --path-target <path> - select package tree root path. May  be read from
@@ -75,6 +75,7 @@ kolchan-builddeb::main() {
 
   fnConfig=$( cfg.getopt config  )
   sProject=$( cfg.getopt project )
+  : ${sProject:=$PROJECT}
 
   if   [[ ! $fnConfig && $sProject ]]; then
 
@@ -104,23 +105,11 @@ kolchan-builddeb::main() {
        sMode="$( cfg.get     []mode    )" ||      sMode='all'
     sProject="$( cfg.get     []project )" ||   sProject=$PROJECT
   pathSource="$( cfg.get [path]source  )" || pathSource=~/src
+  pathTarget="$( cfg.get [path]target  )" || pathTarget=~/builds
 
-  if ! pathTarget="$( cfg.get [path]target )"; then
-
-    if [[ $PRJ_BUILDINFO && -s $PRJ_BUILDINFO ]]; then
-
-      pathTarget="$( head -n 1 $PRJ_BUILDINFO )"
-
-    else
-
-      pathTarget="$( pwd )"
-
-    fi
-
-  fi
+  [[ $sMode =~ ^(source|any|all|binary|full)$ ]] || error InvalidArgument throw -- $sMode
 
   throw on NoSuchDir $pathTarget
-
   cd $pathTarget || error NotPermitted throw -- $pathTarget
 
   if [[ -d debian.upstream && -d debian ]]; then
@@ -164,32 +153,28 @@ kolchan-builddeb::main() {
 
   fi
 
-  #
-  # TODO split buildinfo to the 'binary' and 'source' sections (or 'mode' option)
-  #
-
   std::temp fn
   echo -n "start building:"
   while read; do
 
-  if   [[ $REPLY =~ dpkg-genchanges.--build=(source|any|all|binary|full).\>../(.*)$ ]]; then
-    cfg.set [$sMode]${BASH_REMATCH[1]} = ${BASH_REMATCH[2]}
-  elif [[ $REPLY =~ dpkg-deb:.building.package.*in.*../(.*\.deb) ]]; then
-    cfg.set [$sMode]package = ${BASH_REMATCH[1]}
-  elif [[ $REPLY =~ ^return.code:.(.*)$ ]]; then
-    cfg.set [$sMode]status = ${BASH_REMATCH[1]}
-    if [[ $( cfg.get [$sMode]status ) != '0' ]]; then
-      echo "fail.."
-      err::debug 1 stderr:
-      cat $fn 1>&2
+    if   [[ $REPLY =~ dpkg-genchanges.--build=(source|any|all|binary|full).\>../(.*)$ ]]; then
+      cfg.set [$sMode]${BASH_REMATCH[1]} = ${BASH_REMATCH[2]}
+    elif [[ $REPLY =~ dpkg-deb:.building.package.*in.*../(.*\.deb) ]]; then
+      cfg.set [$sMode]package = ${BASH_REMATCH[1]}
+    elif [[ $REPLY =~ ^return.code:.(.*)$ ]]; then
+      cfg.set [$sMode]status = ${BASH_REMATCH[1]}
+      if [[ $( cfg.get [$sMode]status ) != '0' ]]; then
+        echo "fail.."
+        err::debug 1 stderr:
+        cat $fn 1>&2
+      else
+        echo "ok!"
+      fi
+      cfg.set [$sMode]timestamp = $( std::date %s )
     else
-      echo "ok!"
+      echo $REPLY >> $fn
+      echo -n '.'
     fi
-    cfg.set [$sMode]timestamp = $( std::date %s )
-  else
-    echo $REPLY >> $fn
-    echo -n '.'
-  fi
 
   done< <( LC_ALL=C dpkg-buildpackage --build=$sMode -rfakeroot 2>&1; echo "return code: $?" )
 

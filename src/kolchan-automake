@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-automake 85 2019-05-29 00:25:51+04:00 yds $
+# $Id: kolchan-automake 88 2019-05-29 12:54:57+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
@@ -9,7 +9,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-automake::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-automake 85 2019-05-29 00:25:51+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-automake 88 2019-05-29 12:54:57+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -28,6 +28,7 @@ kolchan-automake::usage() {
 #    kolchan-automake <options>
 #  ARGUMENTS
 #    -h, --help               - show this usage and exit
+#    -c, --config <name>      - set config file (full path or short name)
 #    -p, --project <name>     - set project name
 #    -v, --verbosity <number> - set DEBUGLEVEL for debug messages
 #    -V, --version ...        - set version
@@ -37,7 +38,7 @@ kolchan-automake::usage() {
 #    Damir Sh. Yakupov <yds@bk.ru>
 #  EXAMPLE
 #
-#    kolchan-automake --project test --version 1.23
+#    kolchan-automake --project test
 #
 	EOF
 
@@ -55,15 +56,15 @@ kolchan-automake::main() {
 
   local fn pathWork sAuthor sProject sVersion
 
-  #
-  # TODO add package name by CLI
-  #
   CFG cfg
   cfg.bind.cli config{c}: help{h} project{p}: verbosity{v}: version{V}:
 
   [[ $( cfg.getopt help   ) ]] && kolchan-automake::usage
+  pathWork="$( pwd )"
+
   fnConfig=$( cfg.getopt config  )
   sProject=$( cfg.getopt project )
+  : ${sProject:=${pathWork##*/}}
 
   if   [[ ! $fnConfig && $sProject ]]; then
 
@@ -89,8 +90,6 @@ kolchan-automake::main() {
 
   cfg.load
 
-  pathWork="$( pwd )"
-
   DEBUGLEVEL=$( cfg.get verbosity )
   std::isNumber $DEBUGLEVEL || DEBUGLEVEL=1
 
@@ -105,7 +104,6 @@ kolchan-automake::main() {
   for fn in NEWS README TODO; do [[ -f $fn ]] || touch $fn; done
 
   #sProject=${sProject/-$sVersion/}
-  : ${sProject:=${pathWork##*/}}
   : ${sVersion:=$(grep -i version ChangeLog | head -n 1 | xargs | cut -f 2 -d' ')}
 
   throw on EmptyVariable sVersion
