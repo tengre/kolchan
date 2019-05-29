@@ -5,7 +5,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
 #
 #
-eval "__aId=( $Id: git-add-id 83 2019-05-28 18:58:45+04:00 yds $ )"
+eval "__aId=( $Id: git-add-id 90 2019-05-29 18:11:57+04:00 yds $ )"
 #
 #
 #
@@ -17,7 +17,7 @@ kolchan::git-add-id::usage() {
             "${0##*/}"                                                         \
             "rev${__aId[2]}"                                                   \
             "${__aId[3]}"                                                      \
-            "2016-$(date +%Y)"
+            "2016-$(std::date %Y)"
 
 #****h* kolchan/git-add-id
 	cat <<-EOF | tr -d '#'

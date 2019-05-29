@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-builddeb 88 2019-05-29 12:54:57+04:00 yds $
+# $Id: kolchan-builddeb 90 2019-05-29 18:11:57+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,13 +11,13 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-builddeb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-builddeb 88 2019-05-29 12:54:57+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-builddeb 90 2019-05-29 18:11:57+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
             "rev${aId[2]}"                                                     \
             "${aId[3]}"                                                        \
-            "2016-$(date +%Y)"
+            "2016-$(std::date %Y)"
 
 #****h* kolchan/kolchan-builddeb
 	cat <<-EOF | tr -d '#'
@@ -44,7 +44,7 @@ kolchan-builddeb::usage() {
 #    Damir Sh. Yakupov <yds@bk.ru>
 #  EXAMPLE
 #
-#    kolchan-builddeb -p test -c test.project.cfg
+#    kolchan-builddeb -p hello-world
 #
 	EOF
 

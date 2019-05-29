@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: kolchan-up2deb 85 2019-05-29 00:25:51+04:00 yds $
+# $Id: kolchan-up2deb 90 2019-05-29 18:11:57+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,13 +11,13 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-up2deb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-up2deb 85 2019-05-29 00:25:51+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-up2deb 90 2019-05-29 18:11:57+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
             "rev${aId[2]}"                                                     \
             "${aId[3]}"                                                        \
-            "2016-$(date +%Y)"
+            "2016-$(std::date %Y)"
 
 #****h* kolchan/kolchan-up2deb
 	cat <<-EOF | tr -d '#'
@@ -51,7 +51,7 @@ kolchan-up2deb::usage() {
 #    Damir Sh. Yakupov <yds@bk.ru>
 #  EXAMPLE
 #
-#    kolchan-up2deb -p test -c test.project.cfg -B init
+#    kolchan-up2deb -p hello-world
 #
 	EOF
 
@@ -77,8 +77,9 @@ kolchan-up2deb::main() {
   DEBUGLEVEL=$( cfg.getopt verbosity )
   std::isNumber $DEBUGLEVEL || DEBUGLEVEL=1
 
-  fnConfig=$( cfg.getopt config  )
-  sProject=$( cfg.getopt project )
+    fnConfig="$( cfg.getopt config    )"
+    sProject="$( cfg.getopt project   )"
+  sBaseBuild="$( cfg.getopt basebuild )"
 
   if   [[ ! $fnConfig && $sProject ]]; then
 
@@ -106,7 +107,6 @@ kolchan-up2deb::main() {
   cfg.load
 
     sProject="$( cfg.get     []project   )" ||   sProject=$PROJECT
-  sBaseBuild="$( cfg.get     []basebuild )"
   pathBuilds="$( cfg.get [path]builds    )" || pathBuilds=~/builds
 
   if ! pathSource="$( cfg.get [path]source )"; then
@@ -183,8 +183,17 @@ kolchan-up2deb::main() {
   err::debug 1 "prepare build $sBuildVersion"
   tar cfz ${sBuildVersion}.tar.gz $sBuildVersion || error NotExistNotCreated throw "${sBuildVersion}.tar.gz"
 
-  [[ $sBaseBuild ]] || sBaseBuild=$( ls -td1 --group-directories-first ${sProject}* | head -n 1 )
-  [[ $sBaseBuild ]] || sBaseBuild=init
+  if [[ ! $sBaseBuild ]]; then
+
+    sBaseBuild=$( ls -td1 --group-directories-first ${sProject}* | head -n 1 )
+    if [[ $sBaseBuild && -d ${pathBuilds}/${sBaseBuild}/debian ]]; then
+      err::debug 1 "found previous build - ${pathBuilds}/${sBaseBuild} - try use uupdate"
+    else
+      err::debug 1 "valid previous build not found, try create by dh_make"
+      sBaseBuild=init
+    fi
+
+  fi
 
   err::debug 2 "base build: $sBaseBuild"
 
@@ -192,7 +201,8 @@ kolchan-up2deb::main() {
 
     err::debug 1 "initial build :: path ${pathBuilds}/${sBuildVersion}"
     cd $sBuildVersion || error NotPermitted throw "${pathBuilds}/${sBuildVersion}"
-    dh_make -i -c gpl --file ../${sBuildVersion}.tar.gz
+    ## TODO try automatically select arch-independent or no
+    dh_make -y -s -i -c gpl2 --file ../${sBuildVersion}.tar.gz
     cfg.set [dh_make]status    = $?
     cfg.set [dh_make]timestamp = $( std::date %s )
     cfg.set [path]target       = ${pathBuilds}/${sBuildVersion}
@@ -201,7 +211,6 @@ kolchan-up2deb::main() {
   else
 
     rm -rf $sBuildVersion
-    [[ $sBaseBuild =~ auto ]] && sBaseBuild=$( ls -td1 --group-directories-first ${sProject}* | head -n 1 )
     throw on MissingArgument $sBaseBuild
     throw on NoSuchDir ${pathBuilds}/${sBaseBuild}
     err::debug 1 "build path $pathBuilds :: prev build $sBaseBuild"
