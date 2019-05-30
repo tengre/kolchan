@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-automake 97 2019-05-30 22:56:15+04:00 yds $
+# $Id: kolchan-automake 99 2019-05-31 02:21:15+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
@@ -9,7 +9,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-automake::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-automake 97 2019-05-30 22:56:15+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-automake 99 2019-05-31 02:21:15+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -56,7 +56,7 @@ kolchan-automake::main() {
   throw on NoSuchFile ChangeLog
   throw on CommandNotFound autoscan autoheader aclocal autoconf autoreconf automake cat cut grep mv pwd robodoc head tr touch sed xargs
 
-  local fn pathWork sAuthor sProject sVersion
+  local fn pathWork s sAuthor sProject sVersion
 
   CFG cfg
   cfg.bind.cli config{c}: help{h} project{p}: verbosity{v}: version{V}:

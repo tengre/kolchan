@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-builddeb 98 2019-05-30 23:44:57+04:00 yds $
+# $Id: kolchan-builddeb 99 2019-05-31 02:21:15+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-builddeb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-builddeb 98 2019-05-30 23:44:57+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-builddeb 99 2019-05-31 02:21:15+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -59,13 +59,14 @@ kolchan-builddeb::main() {
 
   throw on CommandNotFound dpkg-buildpackage head grep rsync sed tail wc
 
-  local fn fnConfig pathTarget pathSource sCodeName sMode sProject
+  local fn fnConfig pathTarget pathSource pathWork s sCodeName sMode sProject
   local -a
 
   CFG cfg
   cfg.bind.cli mode{m}: path-source{s}: path-target{t}: config{c}: project{p}: verbosity{v}: help{h}
 
   [[ $( cfg.getopt help ) ]] && kolchan-builddeb::usage
+  pathWork="$( pwd )"
 
   DEBUGLEVEL=$( cfg.getopt verbosity )
   std::isNumber $DEBUGLEVEL || DEBUGLEVEL=1

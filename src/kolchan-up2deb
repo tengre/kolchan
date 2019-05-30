@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: kolchan-up2deb 98 2019-05-30 23:44:57+04:00 yds $
+# $Id: kolchan-up2deb 99 2019-05-31 02:21:15+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-up2deb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-up2deb 98 2019-05-30 23:44:57+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-up2deb 99 2019-05-31 02:21:15+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -67,12 +67,13 @@ kolchan-up2deb::main() {
   throw on CommandNotFound bc git grep head ls mv uupdate tail tar tr xargs
 
   local -a a
-  local fn fnConfig i iBuildNumber pathBuilds pathSource s sBaseBuild sBuildVersion sProject sVersion
+  local fn fnConfig i iBuildNumber pathBuilds pathSource pathWork s sBaseBuild sBuildVersion sProject sVersion
 
   CFG cfg
   cfg.bind.cli help{h} path-source{s}: project{p}: path-builds{b}: basebuild{B}: config{c}: version{V}: verbosity{v}:
 
   [[ $( cfg.getopt help ) ]] && kolchan-up2deb::usage
+  pathWork="$( pwd )"
 
   DEBUGLEVEL=$( cfg.getopt verbosity )
   std::isNumber $DEBUGLEVEL || DEBUGLEVEL=1
@@ -83,6 +84,8 @@ kolchan-up2deb::main() {
 
   : ${sProject:=$PROJECT}
   : ${sProject:=${pathWork##*/}}
+
+  err::debug 0 $sProject
 
   if   [[ ! $fnConfig && $sProject ]]; then
 
