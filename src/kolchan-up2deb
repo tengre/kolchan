@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: kolchan-up2deb 96 2019-05-30 17:29:05+04:00 yds $
+# $Id: kolchan-up2deb 97 2019-05-30 22:56:15+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-up2deb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-up2deb 96 2019-05-30 17:29:05+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-up2deb 97 2019-05-30 22:56:15+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -80,6 +80,10 @@ kolchan-up2deb::main() {
     fnConfig="$( cfg.getopt config    )"
     sProject="$( cfg.getopt project   )"
   sBaseBuild="$( cfg.getopt basebuild )"
+
+  : ${sProject:=$PROJECT}
+  : ${sProject:=${pathWork##*/}}
+
 
   if   [[ ! $fnConfig && $sProject ]]; then
 
@@ -167,6 +171,21 @@ kolchan-up2deb::main() {
 
   cd $pathBuilds || error NotPermitted throw -- $pathBuilds
 
+  if [[ ! $sBaseBuild ]]; then
+
+    sBaseBuild=$( ls -td1 --group-directories-first ${sProject}* | head -n 1 )
+    if [[ $sBaseBuild && -d ${pathBuilds}/${sBaseBuild}/debian ]]; then
+      ## TODO check by cycle
+      err::debug 1 "found previous build - ${pathBuilds}/${sBaseBuild} - try use uupdate"
+    else
+      err::debug 1 "valid previous build not found, try create by dh_make"
+      sBaseBuild=init
+    fi
+
+  fi
+
+  err::debug 2 "base build: $sBaseBuild"
+
   if [[ $sBuildVersion == $sBaseBuild ]]; then
 
     err::debug 1 base build is same a target - ${sBaseBuild}, abort..
@@ -184,21 +203,6 @@ kolchan-up2deb::main() {
 
   err::debug 1 "prepare build $sBuildVersion"
   tar cfz ${sBuildVersion}.tar.gz $sBuildVersion || error NotExistNotCreated throw "${sBuildVersion}.tar.gz"
-
-  if [[ ! $sBaseBuild ]]; then
-
-    ## TODO ignoring $sBuildVersion required!
-    sBaseBuild=$( ls -td1 --group-directories-first ${sProject}* | head -n 1 )
-    if [[ $sBaseBuild && -d ${pathBuilds}/${sBaseBuild}/debian ]]; then
-      err::debug 1 "found previous build - ${pathBuilds}/${sBaseBuild} - try use uupdate"
-    else
-      err::debug 1 "valid previous build not found, try create by dh_make"
-      sBaseBuild=init
-    fi
-
-  fi
-
-  err::debug 2 "base build: $sBaseBuild"
 
   if [[ $sBaseBuild =~ ^(init|0)$ ]]; then
 
