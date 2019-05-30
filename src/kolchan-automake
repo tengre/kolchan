@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-automake 91 2019-05-29 18:50:38+04:00 yds $
+# $Id: kolchan-automake 95 2019-05-30 17:15:08+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
@@ -9,7 +9,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-automake::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-automake 91 2019-05-29 18:50:38+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-automake 95 2019-05-30 17:15:08+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -66,6 +66,7 @@ kolchan-automake::main() {
 
   fnConfig=$( cfg.getopt config  )
   sProject=$( cfg.getopt project )
+  ## TODO use $PROJECT ?
   : ${sProject:=${pathWork##*/}}
 
   if   [[ ! $fnConfig && $sProject ]]; then
@@ -141,7 +142,12 @@ kolchan-automake::main() {
   automake --add-missing --copy
   cfg.set [autotools]automake = $?
 
-  errorify on CommandNotFound git-add-id && git-add-id
+  if errorify on CommandNotFound git-add-id; then
+
+    git-add-id
+    [[ -s VERSION ]] && cfg.set []build version = $( head -n 1 VERSION )
+
+  fi
 
   if errorify on CommandNotFound ./configure make; then
 
@@ -152,9 +158,13 @@ kolchan-automake::main() {
       make
       cfg.set [autotools]make = $?
     fi
+
   else
+
     cfg.set []Command not found = $( err::status.show )
+
   fi
+
   cfg.set [autotools]timestamp = $( std::date %s )
   cfg.save
   cfg.show
