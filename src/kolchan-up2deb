@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: kolchan-up2deb 94 2019-05-29 23:11:13+04:00 yds $
+# $Id: kolchan-up2deb 96 2019-05-30 17:29:05+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-up2deb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-up2deb 94 2019-05-29 23:11:13+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-up2deb 96 2019-05-30 17:29:05+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -109,6 +109,7 @@ kolchan-up2deb::main() {
 
     sProject="$( cfg.get     []project   )" ||   sProject=$PROJECT
   pathBuilds="$( cfg.get [path]builds    )" || pathBuilds=~/builds
+  sBaseBuild="$( cfg.get     []basebuild )"
 
   if ! pathSource="$( cfg.get [path]source )"; then
 
@@ -186,6 +187,7 @@ kolchan-up2deb::main() {
 
   if [[ ! $sBaseBuild ]]; then
 
+    ## TODO ignoring $sBuildVersion required!
     sBaseBuild=$( ls -td1 --group-directories-first ${sProject}* | head -n 1 )
     if [[ $sBaseBuild && -d ${pathBuilds}/${sBaseBuild}/debian ]]; then
       err::debug 1 "found previous build - ${pathBuilds}/${sBaseBuild} - try use uupdate"
