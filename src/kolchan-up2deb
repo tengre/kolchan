@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: kolchan-up2deb 97 2019-05-30 22:56:15+04:00 yds $
+# $Id: kolchan-up2deb 98 2019-05-30 23:44:57+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-up2deb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-up2deb 97 2019-05-30 22:56:15+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-up2deb 98 2019-05-30 23:44:57+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -84,7 +84,6 @@ kolchan-up2deb::main() {
   : ${sProject:=$PROJECT}
   : ${sProject:=${pathWork##*/}}
 
-
   if   [[ ! $fnConfig && $sProject ]]; then
 
     cfg.storage.use ${sProject}.project.cfg
@@ -111,13 +110,13 @@ kolchan-up2deb::main() {
 
   cfg.load
 
-    sProject="$( cfg.get     []project   )" ||   sProject=$PROJECT
+           s="$( cfg.get     []project   )" &&   sProject=$s
+           s="$( cfg.get     []basebuild )" && sBaseBuild=$s
   pathBuilds="$( cfg.get [path]builds    )" || pathBuilds=~/builds
-  sBaseBuild="$( cfg.get     []basebuild )"
 
   if ! pathSource="$( cfg.get [path]source )"; then
 
-    [[ $sProject ]] && pathSource=~/src/${sProject} || error MissingArgument throw -- 'source project undefined, see -s option'
+    [[ $sProject ]] && pathSource=~/src/${sProject} || error MissingArgument throw -- 'source project undefined, see path-source option'
 
   fi
 
