@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: kolchan-up2deb 99 2019-05-31 02:21:15+04:00 yds $
+# $Id: kolchan-up2deb 100 2019-06-01 10:51:47+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-up2deb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-up2deb 99 2019-05-31 02:21:15+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-up2deb 100 2019-06-01 10:51:47+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -138,7 +138,8 @@ kolchan-up2deb::main() {
 
   cd $pathSource || error NotPermitted throw -- $pathSource
 
-  if ! LC_ALL=C git log 2>&1 | grep '^fatal:.* not have any commits' >/dev/null
+  git status >/dev/null 2>&1
+  if (( $? != 128 )) && ! LC_ALL=C git log 2>&1 | grep '^fatal:.* not have any commits' >/dev/null
   then
 
     iBuildNumber=$( git shortlog -s | grep -oP '^\s+\d+\s+' | xargs | tr ' ' '+' | bc )
@@ -173,9 +174,16 @@ kolchan-up2deb::main() {
 
   cd $pathBuilds || error NotPermitted throw -- $pathBuilds
 
+  if [[ ! -d ${pathBuilds}/${sBaseBuild} ]]; then
+
+    err::debug 1 reference build ${pathBuilds}/${sBaseBuild} not found, try search...
+    sBaseBuild=''
+
+  fi
+
   if [[ ! $sBaseBuild ]]; then
 
-    sBaseBuild=$( ls -td1 --group-directories-first ${sProject}* | head -n 1 )
+    sBaseBuild=$( ls -td1 --group-directories-first ${sProject}* 2>/dev/null | head -n 1 )
     if [[ $sBaseBuild && -d ${pathBuilds}/${sBaseBuild}/debian ]]; then
       ## TODO check by cycle
       err::debug 1 "found previous build - ${pathBuilds}/${sBaseBuild} - try use uupdate"
@@ -196,7 +204,7 @@ kolchan-up2deb::main() {
   fi
 
   SYS::RSYNC rsync
-  rsync.title      = "prepare target $sBuildVersion from ${sBaseBuild}"
+  rsync.title      = "prepare target $sBuildVersion from ${pathSource}"
   rsync.options    = -aCrv
   rsync.pathSource = ${pathSource}/
   rsync.pathTarget = ${pathBuilds}/${sBuildVersion}
