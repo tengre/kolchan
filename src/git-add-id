@@ -5,7 +5,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
 #
 #
-eval "__aId=( $Id: git-add-id 90 2019-05-29 18:11:57+04:00 yds $ )"
+eval "__aId=( $Id: git-add-id 102 2019-06-04 01:12:38+04:00 yds $ )"
 #
 #
 #
@@ -22,12 +22,12 @@ kolchan::git-add-id::usage() {
 #****h* kolchan/git-add-id
 	cat <<-EOF | tr -d '#'
 #  DESCRIPTION
-#    Easy way to emulate SVN keywords. Currently, compound keyword "Id"  handled
-#    only. Revision number (aka "Rev")  is  a  total number of completed commits
-#    plus one as the expected next commit. "Author" part of the "Id" is a system
-#    name of the current user (id -nu ). May be  overloaded  by  special  option
-#    "user.id" from git config, but like single word only. Keyword "Id" value is
-#    updated before adding to the git index.
+#    Easy  way  to  emulate  SVN  keywords  without  using git hooks. Currently,
+#    compound  keyword "Id" handled only. Revision number (aka "Rev") is a total
+#    number  of completed commits plus one as the expected next commit. "Author"
+#    part  of  the  "Id"  is a system name of the current user (id -nu ). May be
+#    overloaded  by  special  option  "user.id" from git config, but like single
+#    word only. Keyword "Id" value is updated before adding to the git index.
 #  USAGE
 #    git-add-id [ -h|--help ] | [<files> ...]
 #  ARGUMENTS

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-automake 101 2019-06-02 22:32:14+04:00 yds $
+# $Id: kolchan-automake 102 2019-06-04 00:47:11+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
@@ -9,7 +9,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-automake::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-automake 101 2019-06-02 22:32:14+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-automake 102 2019-06-04 00:47:11+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -21,7 +21,10 @@ kolchan-automake::usage() {
 	cat <<-EOF | tr -d '#'
 #  DESCRIPTION
 #    building a project using autotools based on the prepared Automake.am files
-#    in each subdirectory. ChangeLog file is also required.
+#    in each subdirectory. ChangeLog file is also required. Supported format:
+#        <date (date -R stdout)>
+#        <release comment (new, bugfix, ...)>
+#        Version <version string>
 #  USAGE
 #    kolchan-automake <options>
 #  ARGUMENTS
@@ -41,7 +44,6 @@ kolchan-automake::usage() {
 #  AUTHOR
 #    Damir Sh. Yakupov <yds@bk.ru>
 #  EXAMPLE
-#
 #	mkdir -p ~/src/hello-world
 #	cd       ~/src/hello-world
 #	cat <<- MAKEFILE > Makefile.am
@@ -61,7 +63,8 @@ kolchan-automake::usage() {
 #	Version 0.01
 #	CHANGELOG
 #
-#	git init . && git add . git commit -m "Initial" && kolchan-automake
+#	hash git 2>/dev/null && git init . && git add . git commit -m "Initial"
+#	kolchan-automake
 #
 	EOF
 
@@ -157,7 +160,7 @@ kolchan-automake::main() {
 
   for s in aclocal autoconf autoreconf 'automake --add-missing --copy'; do
     $s
-    cfg.set [autotools]$s = $?
+    cfg.set [autotools]${s%% *} = $?
   done
 
   if errorify on CommandNotFound git-add-id; then
