@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: kolchan-up2deb 100 2019-06-01 10:51:47+04:00 yds $
+# $Id: kolchan-up2deb 101 2019-06-02 22:32:14+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-up2deb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-up2deb 100 2019-06-01 10:51:47+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-up2deb 101 2019-06-02 22:32:14+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -126,8 +126,8 @@ kolchan-up2deb::main() {
   throw on NoSuchDir $pathSource
   [[ $sProject ]] || sProject=${pathSource##*/}
 
-  cfg.set [path]source   = $pathSource
-  cfg.set     []project  = $sProject
+  cfg.set [path]source  = $pathSource
+  cfg.set     []project = $sProject
 
   throw on NoSuchDir $pathBuilds
   cd $pathBuilds || error NotPermitted throw -- $pathBuilds

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-automake 99 2019-05-31 02:21:15+04:00 yds $
+# $Id: kolchan-automake 101 2019-06-02 22:32:14+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
@@ -9,7 +9,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-automake::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-automake 99 2019-05-31 02:21:15+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-automake 101 2019-06-02 22:32:14+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -20,16 +20,20 @@ kolchan-automake::usage() {
 #****h* kolchan/kolchan-automake
 	cat <<-EOF | tr -d '#'
 #  DESCRIPTION
-#    Preparing project source tree with autotools support. Makefile.am for each
-#    compiled folder requred, for root of the project 'ChangeLog' file required
-#    This git oriented tool be invoked within a directory containing the source
-#    code.
+#    building a project using autotools based on the prepared Automake.am files
+#    in each subdirectory. ChangeLog file is also required.
 #  USAGE
 #    kolchan-automake <options>
 #  ARGUMENTS
 #    -h, --help               - show this usage and exit
 #    -c, --config <name>      - set config file (full path or short name)
-#    -p, --project <name>     - set project name
+#    -p, --project <name>     - set project name.  If  no  configuration file is
+#                               specified,  the project name is used to generate
+#                               the configuration file name.
+#    -s, --path-source <path> - select source path. Maybe read from config file.
+#                               Default  is  ~/src. If source path not specified
+#                               then this tool should be invoked within a folder
+#                               containing the source code.
 #    -v, --verbosity <number> - set DEBUGLEVEL for debug messages
 #    -V, --version ...        - set version
 #  USES
@@ -38,9 +42,26 @@ kolchan-automake::usage() {
 #    Damir Sh. Yakupov <yds@bk.ru>
 #  EXAMPLE
 #
-#    cd ~/src
-#    mkdir -p helloworld
-#    kolchan-automake
+#	mkdir -p ~/src/hello-world
+#	cd       ~/src/hello-world
+#	cat <<- MAKEFILE > Makefile.am
+#	hello_world_SOURCES = hello_world.c
+#	bin_PROGRAMS        = hello_world
+#	DESTDIR             =
+#	MAKEFILE
+#	cat <<- HELLOWORLD > hello_world.c
+#	#include <stdio.h>
+#	int main() {
+#		printf( "%s\n", "hello, world!" );
+#	}
+#	HELLOWORLD
+#	cat <<- CHANGELOG > ChangeLog
+#	$( date -R )
+#	Initial release
+#	Version 0.01
+#	CHANGELOG
+#
+#	git init . && git add . git commit -m "Initial" && kolchan-automake
 #
 	EOF
 
@@ -53,27 +74,31 @@ kolchan-automake::usage() {
 #
 kolchan-automake::main() {
 
-  throw on NoSuchFile ChangeLog
   throw on CommandNotFound autoscan autoheader aclocal autoconf autoreconf automake cat cut grep mv pwd robodoc head tr touch sed xargs
 
-  local fn pathWork s sAuthor sProject sVersion
+  local fn pathSource s sAuthor sProject sVersion
 
   CFG cfg
-  cfg.bind.cli config{c}: help{h} project{p}: verbosity{v}: version{V}:
+  cfg.bind.cli config{c}: help{h} project{p}: path-source{s}: verbosity{v}: version{V}:
 
   [[ $( cfg.getopt help   ) ]] && kolchan-automake::usage
-  pathWork="$( pwd )"
 
-  fnConfig=$( cfg.getopt config  )
-  sProject=$( cfg.getopt project )
+    fnConfig="$( cfg.getopt config  )"
+    sProject="$( cfg.getopt project )"
+  pathSource="$( cfg.getopt path-source )"
   : ${sProject:=$PROJECT}
-  : ${sProject:=${pathWork##*/}}
+
+  [[ $pathSource && -d $pathSource ]] || pathSource="$( pwd )"
+  : ${sProject:=${pathSource##*/}}
+
+  cd "$pathSource" || error NotPermitted throw -- $pathSource
+  throw on NoSuchFile ChangeLog
 
   if   [[ ! $fnConfig && $sProject ]]; then
 
     cfg.storage.use ${sProject}.project.cfg
 
-  elif [[ $fnConfig && -f $fnConfig ]]; then
+  elif [[ $fnConfig ]] && touch $fnConfig 2>/dev/null; then
 
     cfg.storage.use $fnConfig
 
@@ -84,7 +109,6 @@ kolchan-automake::main() {
 
   elif [[ ! $fnConfig && ! $sProject ]]; then
 
-    ## TODO try use current directory here
     cfg.storage.use
 
   fi
@@ -107,7 +131,6 @@ kolchan-automake::main() {
 
   for fn in NEWS README TODO; do [[ -f $fn ]] || touch $fn; done
 
-  #sProject=${sProject/-$sVersion/}
   : ${sVersion:=$(grep -i version ChangeLog | head -n 1 | xargs | cut -f 2 -d' ')}
 
   throw on EmptyVariable sVersion
@@ -116,10 +139,11 @@ kolchan-automake::main() {
 
   sEmail="$(grep -o -E '<.*>' AUTHORS | tr -d '<|>' | head -n 1)"
 
-  cfg.set []version = $sVersion
-  cfg.set []project = $sProject
-  cfg.set []email   = $sEmail
-  cfg.set []author  = $sAuthor
+  cfg.set     []version = $sVersion
+  cfg.set     []project = $sProject
+  cfg.set     []author  = $sAuthor
+  cfg.set     []email   = $sEmail
+  cfg.set [path]source  = $pathSource
   cfg.save
 
   autoscan
@@ -131,15 +155,10 @@ kolchan-automake::main() {
 
   sed -i -e "s/AC_INIT.*/AC_INIT(${sProject}, ${sVersion}, ${sEmail})\nAM_INIT_AUTOMAKE/ig" configure.ac
 
-  aclocal
-  cfg.set [autotools]aclocal = $?
-
-  autoconf
-  cfg.set [autotools]autoconf = $?
-  autoreconf
-  cfg.set [autotools]autoreconf = $?
-  automake --add-missing --copy
-  cfg.set [autotools]automake = $?
+  for s in aclocal autoconf autoreconf 'automake --add-missing --copy'; do
+    $s
+    cfg.set [autotools]$s = $?
+  done
 
   if errorify on CommandNotFound git-add-id; then
 
