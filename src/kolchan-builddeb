@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-builddeb 99 2019-05-31 02:21:15+04:00 yds $
+# $Id: kolchan-builddeb 103 2019-06-04 02:16:43+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-builddeb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-builddeb 99 2019-05-31 02:21:15+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-builddeb 103 2019-06-04 02:16:43+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -80,7 +80,7 @@ kolchan-builddeb::main() {
 
     cfg.storage.use ${sProject}.project.cfg
 
-  elif [[ $fnConfig && -f $fnConfig ]]; then
+  elif [[ $fnConfig ]] && touch $fnConfig 2>/dev/null; then
 
     cfg.storage.use $fnConfig
 
@@ -103,7 +103,7 @@ kolchan-builddeb::main() {
   cfg.load
 
            s="$( cfg.get     []project )" &&   sProject=$s
-       sMode="$( cfg.get     []mode    )" ||      sMode='all'
+       sMode="$( cfg.get     []mode    )" ||      sMode='full'
   pathSource="$( cfg.get [path]source  )" || pathSource=~/src
   pathTarget="$( cfg.get [path]target  )" || pathTarget=~/builds
 

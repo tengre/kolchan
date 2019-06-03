@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: kolchan-up2deb 101 2019-06-02 22:32:14+04:00 yds $
+# $Id: kolchan-up2deb 103 2019-06-04 02:16:43+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-up2deb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-up2deb 101 2019-06-02 22:32:14+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-up2deb 103 2019-06-04 02:16:43+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -91,7 +91,7 @@ kolchan-up2deb::main() {
 
     cfg.storage.use ${sProject}.project.cfg
 
-  elif [[ $fnConfig && -f $fnConfig ]]; then
+  elif [[ $fnConfig ]] && touch $fnConfig 2>/dev/null; then
 
     cfg.storage.use $fnConfig
 
@@ -102,7 +102,6 @@ kolchan-up2deb::main() {
 
   elif [[ ! $fnConfig && ! $sProject ]]; then
 
-    ## TODO try use current directory here
     cfg.storage.use
 
   fi
@@ -219,7 +218,8 @@ kolchan-up2deb::main() {
     err::debug 1 "initial build :: path ${pathBuilds}/${sBuildVersion}"
     cd $sBuildVersion || error NotPermitted throw "${pathBuilds}/${sBuildVersion}"
     ## TODO try automatically select arch-independent or no
-    dh_make -y -i -c gpl2 --file ../${sBuildVersion}.tar.gz
+    [[ $( cfg.get []archindep ) == true ]] && s='i' || s='s'
+    dh_make -y -${s} -c gpl2 --file ../${sBuildVersion}.tar.gz
     cfg.set [dh_make]status    = $?
     cfg.set [dh_make]timestamp = $( std::date %s )
     cfg.set [path]target       = ${pathBuilds}/${sBuildVersion}
