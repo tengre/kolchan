@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: kolchan-up2deb 103 2019-06-04 02:16:43+04:00 yds $
+# $Id: kolchan-up2deb 104 2019-06-04 02:38:57+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-up2deb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-up2deb 103 2019-06-04 02:16:43+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-up2deb 104 2019-06-04 02:38:57+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -50,9 +50,26 @@ kolchan-up2deb::usage() {
 #  AUTHOR
 #    Damir Sh. Yakupov <yds@bk.ru>
 #  EXAMPLE
-#
-#    kolchan-up2deb -p hello-world
-#
+#	mkdir -p ~/src/hello-world
+#	cd       ~/src/hello-world
+#	cat <<- MAKEFILE > Makefile.am
+#	hello_world_SOURCES = hello_world.c
+#	bin_PROGRAMS        = hello_world
+#	DESTDIR             =
+#	MAKEFILE
+#	cat <<- HELLOWORLD > hello_world.c
+#	#include <stdio.h>
+#	int main() {
+#		printf( "%s\n", "hello, world!" );
+#	}
+#	HELLOWORLD
+#	cat <<- CHANGELOG > ChangeLog
+#	$( date -R )
+#	Initial release
+#	Version 0.01
+#	CHANGELOG
+#	hash git 2>/dev/null && git init . && git add . git commit -m "Initial"
+#	kolchan-automake && kolchan-up2deb
 	EOF
 
   exit $rc
