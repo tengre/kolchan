@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-automake 103 2019-06-04 01:58:52+04:00 yds $
+# $Id: kolchan-automake 106 2019-06-04 20:10:24+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
@@ -9,7 +9,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-automake::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-automake 103 2019-06-04 01:58:52+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-automake 106 2019-06-04 20:10:24+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -167,6 +167,7 @@ kolchan-automake::main() {
 
     git-add-id
     [[ -s VERSION ]] && cfg.set []build version = $( head -n 1 VERSION )
+    cfg.set []git describe = $( git describe )
 
   fi
 
@@ -175,7 +176,7 @@ kolchan-automake::main() {
     ./configure --prefix=/usr
     rc=$?
     cfg.set [autotools]configure = $rc
-    cfg.set          []archindep = $( grep -q gcc config.log && echo false || echo true )
+    cfg.set          []archindep = $( grep -qw ^gcc config.log && echo false || echo true )
     if (( rc == 0 )); then
       make
       cfg.set [autotools]make = $?
