@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: kolchan-up2deb 104 2019-06-04 02:38:57+04:00 yds $
+# $Id: kolchan-up2deb 107 2019-06-06 02:26:39+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-up2deb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-up2deb 104 2019-06-04 02:38:57+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-up2deb 107 2019-06-06 02:26:39+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -68,7 +68,7 @@ kolchan-up2deb::usage() {
 #	Initial release
 #	Version 0.01
 #	CHANGELOG
-#	hash git 2>/dev/null && git init . && git add . git commit -m "Initial"
+#	hash git 2>/dev/null && git init && git add . && git commit -m "Initial"
 #	kolchan-automake && kolchan-up2deb
 	EOF
 
