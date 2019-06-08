@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-automake 107 2019-06-06 02:26:39+04:00 yds $
+# $Id: kolchan-automake 109 2019-06-08 16:53:22+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
@@ -9,7 +9,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-automake::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-automake 107 2019-06-06 02:26:39+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-automake 109 2019-06-08 16:53:22+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -117,12 +117,12 @@ kolchan-automake::main() {
   fi
 
   fnConfig=$( cfg.storage.show )
-  err::debug 1 project configuration $fnConfig
 
   cfg.load
 
   DEBUGLEVEL=$( cfg.get verbosity )
   std::isNumber $DEBUGLEVEL || DEBUGLEVEL=1
+  err::debug 1 project configuration $fnConfig
 
   sVersion=$( cfg.get version )
 

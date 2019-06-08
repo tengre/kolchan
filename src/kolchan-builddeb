@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-builddeb 107 2019-06-06 02:26:39+04:00 yds $
+# $Id: kolchan-builddeb 109 2019-06-08 16:53:22+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-builddeb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-builddeb 107 2019-06-06 02:26:39+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-builddeb 109 2019-06-08 16:53:22+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -29,14 +29,14 @@ kolchan-builddeb::usage() {
 #    kolchan-builddeb <options>
 #  ARGUMENTS
 #    -h, --help               - show this usage and exit
-#    -m, --mode <mode>        - select source|any|all|binary|full mode. Required
-#    -s, --path-source <path> - select source tree root path. May  be  read from
-#                               config. Default - ~/src
-#    -t, --path-target <path> - select package tree root path. May  be read from
-#                               config. Default - ~/builds
-#    -p, --project <name>     - set project name
-#    -c, --config <file>      - configuration  file for share build data between
-#                               building tools
+#    -m, --mode <mode>        - select build mode as source|any|all|binary|full.
+#                               Default is a 'binary'.
+#    -t, --path-target <path> - select package build path. Maybe get from config
+#                               Default is a current directory
+#    -c, --config <name>      - set config file (full path or short name)
+#    -p, --project <name>     - set project name.  If  no  configuration file is
+#                               specified,  the project name is used to generate
+#                               the configuration file name.
 #    -v, --verbosity <number> - set DEBUGLEVEL for debug messages
 #  USES
 #    bashlyk >= 1.94
@@ -76,22 +76,26 @@ kolchan-builddeb::main() {
 
   throw on CommandNotFound dpkg-buildpackage head grep rsync sed tail wc
 
-  local fn fnConfig pathTarget pathSource pathWork s sCodeName sMode sProject
+  local fn fnConfig pathTarget pathWork s sCodeName sMode sProject
   local -a
 
   CFG cfg
   cfg.bind.cli mode{m}: path-source{s}: path-target{t}: config{c}: project{p}: verbosity{v}: help{h}
 
   [[ $( cfg.getopt help ) ]] && kolchan-builddeb::usage
-  pathWork="$( pwd )"
 
   DEBUGLEVEL=$( cfg.getopt verbosity )
   std::isNumber $DEBUGLEVEL || DEBUGLEVEL=1
 
   fnConfig=$( cfg.getopt config  )
   sProject=$( cfg.getopt project )
+     sMode=$( cfg.getopt mode    ) || sMode='binary'
+
   : ${sProject:=$PROJECT}
-  : ${sProject:=${pathWork##*/}}
+  if [[ ! $sProject ]]; then
+    pathWork="$( pwd )"
+    sProject=${pathWork##*/}
+  fi
 
   if   [[ ! $fnConfig && $sProject ]]; then
 
@@ -108,21 +112,18 @@ kolchan-builddeb::main() {
 
   elif [[ ! $fnConfig && ! $sProject ]]; then
 
-    ## TODO try use current directory here
     cfg.storage.use
 
   fi
 
   fnConfig=$( cfg.storage.show )
 
-  err::debug 1 project configuration $fnConfig
-
   cfg.load
 
-           s="$( cfg.get     []project )" &&   sProject=$s
-       sMode="$( cfg.get     []mode    )" ||      sMode='binary'
-  pathSource="$( cfg.get [path]source  )" || pathSource=~/src
-  pathTarget="$( cfg.get [path]target  )" || pathTarget=~/builds
+  pathTarget="$( cfg.get [path]target )"
+  DEBUGLEVEL=$( cfg.get verbosity )
+  std::isNumber $DEBUGLEVEL || DEBUGLEVEL=1
+  err::debug 1 project configuration $fnConfig
 
   [[ $sMode =~ ^(source|any|all|binary|full)$ ]] || error InvalidArgument throw -- $sMode
 
@@ -189,6 +190,7 @@ kolchan-builddeb::main() {
         err::debug 1 stderr:
         cat $fn 1>&2
       else
+        cfg.set []last succesfully build = $pathTarget
         echo "ok!"
       fi
       cfg.set [$sMode]timestamp = $( std::date %s )

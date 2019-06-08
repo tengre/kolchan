@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: kolchan-up2deb 107 2019-06-06 02:26:39+04:00 yds $
+# $Id: kolchan-up2deb 109 2019-06-08 16:53:22+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-up2deb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-up2deb 107 2019-06-06 02:26:39+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-up2deb 109 2019-06-08 16:53:22+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -90,7 +90,6 @@ kolchan-up2deb::main() {
   cfg.bind.cli help{h} path-source{s}: project{p}: path-builds{b}: basebuild{B}: config{c}: version{V}: verbosity{v}:
 
   [[ $( cfg.getopt help ) ]] && kolchan-up2deb::usage
-  pathWork="$( pwd )"
 
   DEBUGLEVEL=$( cfg.getopt verbosity )
   std::isNumber $DEBUGLEVEL || DEBUGLEVEL=1
@@ -100,9 +99,12 @@ kolchan-up2deb::main() {
   sBaseBuild="$( cfg.getopt basebuild )"
 
   : ${sProject:=$PROJECT}
-  : ${sProject:=${pathWork##*/}}
+  if [[ ! $sProject ]]; then
+    pathWork="$( pwd )"
+    sProject=${pathWork##*/}
+  fi
 
-  err::debug 0 $sProject
+  err::debug 2 make build source package for $sProject
 
   if   [[ ! $fnConfig && $sProject ]]; then
 
@@ -125,13 +127,14 @@ kolchan-up2deb::main() {
 
   fnConfig=$( cfg.storage.show )
 
-  err::debug 1 project configuration $fnConfig
-
   cfg.load
 
            s="$( cfg.get     []project   )" &&   sProject=$s
            s="$( cfg.get     []basebuild )" && sBaseBuild=$s
   pathBuilds="$( cfg.get [path]builds    )" || pathBuilds=~/builds
+  DEBUGLEVEL=$( cfg.get verbosity )
+  std::isNumber $DEBUGLEVEL || DEBUGLEVEL=1
+  err::debug 1 project configuration $fnConfig
 
   if ! pathSource="$( cfg.get [path]source )"; then
 
@@ -210,17 +213,17 @@ kolchan-up2deb::main() {
 
   fi
 
-  err::debug 2 "base build: $sBaseBuild"
+  err::debug 2 "used base build $sBaseBuild for package source updating"
 
   if [[ $sBuildVersion == $sBaseBuild ]]; then
 
-    err::debug 1 base build is same a target - ${sBaseBuild}, abort..
+    err::debug 1 used previous build is same a target - ${sBaseBuild}, abort..
     return 1
 
   fi
 
   SYS::RSYNC rsync
-  rsync.title      = "prepare target $sBuildVersion from ${pathSource}"
+  rsync.title      = "prepare target $sBuildVersion from $sProject"
   rsync.options    = -aCrv
   rsync.pathSource = ${pathSource}/
   rsync.pathTarget = ${pathBuilds}/${sBuildVersion}
@@ -232,9 +235,8 @@ kolchan-up2deb::main() {
 
   if [[ $sBaseBuild =~ ^(init|0)$ ]]; then
 
-    err::debug 1 "initial build :: path ${pathBuilds}/${sBuildVersion}"
+    err::debug 1 "try create package source ${pathBuilds}/${sBuildVersion}"
     cd $sBuildVersion || error NotPermitted throw "${pathBuilds}/${sBuildVersion}"
-    ## TODO try automatically select arch-independent or no
     [[ $( cfg.get []archindep ) == true ]] && s='i' || s='s'
     dh_make -y -${s} -c gpl2 --file ../${sBuildVersion}.tar.gz
     cfg.set [dh_make]status    = $?
