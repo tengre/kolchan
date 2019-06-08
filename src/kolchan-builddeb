@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-builddeb 109 2019-06-08 16:53:22+04:00 yds $
+# $Id: kolchan-builddeb 110 2019-06-08 20:22:35+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-builddeb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-builddeb 109 2019-06-08 16:53:22+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-builddeb 110 2019-06-08 20:22:35+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -24,7 +24,8 @@ kolchan-builddeb::usage() {
 #  DESCRIPTION
 #    Easy  way  to  build  debian  package.  Wrapper for dpkg-buildpackage, used
 #    shared with other packaging tools configuration. This useful for automation
-#    build process - jenkins pipelines and other CI.
+#    build  process  - jenkins pipelines and other CI. Expected prepared package
+#    source and configuration file by early runned kolchan-up2deb
 #  USAGE
 #    kolchan-builddeb <options>
 #  ARGUMENTS
@@ -32,7 +33,7 @@ kolchan-builddeb::usage() {
 #    -m, --mode <mode>        - select build mode as source|any|all|binary|full.
 #                               Default is a 'binary'.
 #    -t, --path-target <path> - select package build path. Maybe get from config
-#                               Default is a current directory
+#                               Default is a current directory.
 #    -c, --config <name>      - set config file (full path or short name)
 #    -p, --project <name>     - set project name.  If  no  configuration file is
 #                               specified,  the project name is used to generate
@@ -190,7 +191,7 @@ kolchan-builddeb::main() {
         err::debug 1 stderr:
         cat $fn 1>&2
       else
-        cfg.set []last succesfully build = $pathTarget
+        cfg.set []last succesfully build = ${pathTarget##*/}
         echo "ok!"
       fi
       cfg.set [$sMode]timestamp = $( std::date %s )

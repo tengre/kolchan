@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: kolchan-up2deb 109 2019-06-08 16:53:22+04:00 yds $
+# $Id: kolchan-up2deb 110 2019-06-08 20:32:23+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-up2deb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-up2deb 109 2019-06-08 16:53:22+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-up2deb 110 2019-06-08 20:32:23+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -25,22 +25,22 @@ kolchan-up2deb::usage() {
 #    Easy way to create or upgrade a source code debian package from an upstream
 #    revision. Wrapper for dh_make and uupdate, used shared with other packaging
 #    tools  configuration. This  useful  for  automation build process - jenkins
-#    pipelines and other CI.
+#    pipelines and other CI. Expected  prepared source and configuration file by
+#    early runned kolchan-automake
 #  USAGE
 #    kolchan-up2deb <options>
 #  ARGUMENTS
 #    -h, --help               - show this usage and exit
-#    -s, --path-source <path> - select source tree root path. May  be  read from
-#                               config. Default - ~/src
+#    -c, --config <name>      - set config file (full path or short name)
+#    -p, --project <name>     - set project name.  If  no  configuration file is
+#                               specified,  the project name is used to generate
+#                               the configuration file name.
+#    -s, --path-source <path> - select source path. Maybe read from config file.
+#                               Default is a current directory.
 #    -t, --path-target <path> - select package tree root path. May  be read from
-#                               config. Default - ~/builds
-#    -p, --project <name>     - set project name
-#    -c, --config <file>      - configuration  file for share build data between
-#                               building tools
-#    -B, --basebuild ...      - use this build version for upgrade.  May be used
-#                               special keywords - 'init' -create package source
-#                               'auto' - try  get last build version from builds
-#                               folder ( see --path-target option )
+#                               config. Default is a ~/builds
+#    -B, --basebuild ...      - use  this  build version for upgrade. Maybe used
+#                               special keyword 'init' for create package source
 #    -v, --verbosity <number> - set DEBUGLEVEL for debug messages
 #    -V, --version            - set  version  for target package source. Special
 #                               keyword  'git-tag'  enable  last tag from git as
@@ -193,27 +193,31 @@ kolchan-up2deb::main() {
 
   cd $pathBuilds || error NotPermitted throw -- $pathBuilds
 
-  if [[ ! -d ${pathBuilds}/${sBaseBuild} ]]; then
+  if [[ $sBaseBuild && ! $sBaseBuild =~ ^init$ && ! -s ${pathBuilds}/${sBaseBuild}/debian/changelog ]]; then
 
-    err::debug 1 reference build ${pathBuilds}/${sBaseBuild} not found, try search...
+    err::debug 1 reference build ${pathBuilds}/${sBaseBuild} not found or damaged, try search...
     sBaseBuild=''
 
   fi
 
   if [[ ! $sBaseBuild ]]; then
 
-    sBaseBuild=$( ls -td1 --group-directories-first ${sProject}* 2>/dev/null | head -n 1 )
-    if [[ $sBaseBuild && -d ${pathBuilds}/${sBaseBuild}/debian ]]; then
-      ## TODO check by cycle
+    if sBaseBuild=$( cfg.get []last succesfully build ); then
+      err::debug 1 "last builded package source ${sBaseBuild} not found or damaged, try search other..."
+      [[ -s ${pathBuilds}/${sBaseBuild}/debian/changelog ]] || sBaseBuild=''
+    fi
+
+    : ${sBaseBuild:=$( ls -td1 --group-directories-first ${sProject}*/debian/changelog 2>/dev/null | head -n 1 )}
+
+    if [[ $sBaseBuild ]]; then
+      sBaseBuild=${sBaseBuild/\/debian\/changelog}
       err::debug 1 "found previous build - ${pathBuilds}/${sBaseBuild} - try use uupdate"
     else
-      err::debug 1 "valid previous build not found, try create by dh_make"
+      err::debug 1 "valid previous build not found, try create package source by dh_make"
       sBaseBuild=init
     fi
 
   fi
-
-  err::debug 2 "used base build $sBaseBuild for package source updating"
 
   if [[ $sBuildVersion == $sBaseBuild ]]; then
 
@@ -222,18 +226,20 @@ kolchan-up2deb::main() {
 
   fi
 
+  err::debug 2 "used base build $sBaseBuild for package source $sBuildVersion updating"
+
   SYS::RSYNC rsync
-  rsync.title      = "prepare target $sBuildVersion from $sProject"
+  rsync.title      = "prepare package source $sBuildVersion for $sProject"
   rsync.options    = -aCrv
   rsync.pathSource = ${pathSource}/
   rsync.pathTarget = ${pathBuilds}/${sBuildVersion}
   rsync.onFailure  = throw
   rsync.run
 
-  err::debug 1 "prepare build $sBuildVersion"
+  err::debug 2 "prepare tar archive of the $sBuildVersion"
   tar cfz ${sBuildVersion}.tar.gz $sBuildVersion || error NotExistNotCreated throw "${sBuildVersion}.tar.gz"
 
-  if [[ $sBaseBuild =~ ^(init|0)$ ]]; then
+  if [[ $sBaseBuild =~ ^init$ ]]; then
 
     err::debug 1 "try create package source ${pathBuilds}/${sBuildVersion}"
     cd $sBuildVersion || error NotPermitted throw "${pathBuilds}/${sBuildVersion}"
@@ -242,44 +248,42 @@ kolchan-up2deb::main() {
     cfg.set [dh_make]status    = $?
     cfg.set [dh_make]timestamp = $( std::date %s )
     cfg.set [path]target       = ${pathBuilds}/${sBuildVersion}
-    [[ $( cfg.get [dh_make]status ) == '0' ]] && cfg.set []basebuild = $sBuildVersion
 
   else
 
     rm -rf $sBuildVersion
     throw on MissingArgument $sBaseBuild
     throw on NoSuchDir ${pathBuilds}/${sBaseBuild}
-    err::debug 1 "build path $pathBuilds :: prev build $sBaseBuild"
+    err::debug 2 "update package source - $sBaseBuild -> $sBuildVersion"
     cd $sBaseBuild || error NotPermitted throw "${pathBuilds}/${sBaseBuild}"
 
     std::temp fn
-    echo -n "start uupdate:"
+    err::debugf 1 '%s: ' "start uupdate"
 
     while read; do
       if [[ $REPLY =~ ^return.code:.(.*)$ ]]; then
         cfg.set [uupdate]status = ${BASH_REMATCH[1]}
         if [[ $( cfg.get [uupdate]status ) != '0' ]]; then
-          echo "fail.."
+          err::debug 1 "fail.."
           err::debug 1 stderr:
           err::debug 1 && cat $fn 1>&2
           i=1
         else
-          echo "ok!"
-          echo "target path ${pathBuilds}/${sBuildVersion}"
-          cfg.set [path]target    = ${pathBuilds}/${sBuildVersion}
-          cfg.set     []basebuild = $sBuildVersion
+          err::debug 1 "ok!"
+          err::debug 2 "target path ${pathBuilds}/${sBuildVersion}"
+          cfg.set [path]target = ${pathBuilds}/${sBuildVersion}
           i=0
         fi
         cfg.set [uupdate]timestamp = $( std::date %s )
       else
         echo $REPLY > $fn
-        echo -n '.'
+        err::debugf 1 '%s' '.'
       fi
     done< <( LC_ALL=C uupdate ${sBuildVersion}.tar.gz 2>&1; echo "return code: $?" )
 
   fi
 
-  err::debug 1 status of the preparation target $s from $sBaseBuild:
+  err::debug 1 status of the preparation target $sBuildVersion from $sBaseBuild:
   cfg.show
   cfg.save
   cfg.free

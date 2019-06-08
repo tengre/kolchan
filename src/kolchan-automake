@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-automake 109 2019-06-08 16:53:22+04:00 yds $
+# $Id: kolchan-automake 110 2019-06-08 18:28:39+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
@@ -9,7 +9,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-automake::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-automake 109 2019-06-08 16:53:22+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-automake 110 2019-06-08 18:28:39+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -34,11 +34,9 @@ kolchan-automake::usage() {
 #                               specified,  the project name is used to generate
 #                               the configuration file name.
 #    -s, --path-source <path> - select source path. Maybe read from config file.
-#                               Default  is  ~/src. If source path not specified
-#                               then this tool should be invoked within a folder
-#                               containing the source code.
+#                               Default is a current directory.
 #    -v, --verbosity <number> - set DEBUGLEVEL for debug messages
-#    -V, --version ...        - set version
+#    -V, --version ...        - set version for source
 #  USES
 #    bashlyk >= 1.94
 #  AUTHOR
