@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: kolchan-up2deb 113 2019-06-08 22:22:01+04:00 yds $
+# $Id: kolchan-up2deb 114 2019-06-08 22:41:25+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-up2deb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-up2deb 113 2019-06-08 22:22:01+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-up2deb 114 2019-06-08 22:41:25+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -200,15 +200,19 @@ kolchan-up2deb::main() {
 
   if [[ ! $sBaseBuild ]]; then
 
-    if ! sBaseBuild=$( cfg.get []last succesfully build ); then
-      err::debug 1 "last builded package source ${sBaseBuild} not found or damaged, try search other..."
-      [[ -s ${pathBuilds}/${sBaseBuild}/debian/changelog ]] || sBaseBuild=''
+    if sBaseBuild=$( cfg.get []last succesfully build ); then
+      if [[ ! -s ${pathBuilds}/${sBaseBuild}/debian/changelog ]]; then
+        err::debug 1 "last builded package source ${sBaseBuild} not found or damaged, try search other..."
+        sBaseBuild=''
+      fi
     fi
 
-    : ${sBaseBuild:=$( ls -td1 --group-directories-first ${sProject}*/debian/changelog 2>/dev/null | head -n 1 )}
+    if [[ ! $sBaseBuild ]]; then
+      sBaseBuild="$( ls -td1 --group-directories-first ${sProject}*/debian/changelog 2>/dev/null | head -n 1 )"
+      sBaseBuild=${sBaseBuild/\/debian\/changelog}
+    fi
 
     if [[ $sBaseBuild ]]; then
-      sBaseBuild=${sBaseBuild/\/debian\/changelog}
       err::debug 1 "found previous build - ${pathBuilds}/${sBaseBuild} - try use uupdate"
     else
       err::debug 1 "valid previous build not found, try create package source by dh_make"
