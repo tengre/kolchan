@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: kolchan-up2deb 110 2019-06-08 20:32:23+04:00 yds $
+# $Id: kolchan-up2deb 111 2019-06-08 22:01:41+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-up2deb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-up2deb 110 2019-06-08 20:32:23+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-up2deb 111 2019-06-08 22:01:41+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -114,10 +114,9 @@ kolchan-up2deb::main() {
 
     cfg.storage.use $fnConfig
 
-  ## TODO remove '/' or set error
   elif [[ $fnConfig ]]; then
 
-    cfg.storage.use ${fnConfig}.project.cfg
+    cfg.storage.use ${fnConfig//\//_}.project.cfg
 
   elif [[ ! $fnConfig && ! $sProject ]]; then
 
