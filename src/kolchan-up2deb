@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: kolchan-up2deb 111 2019-06-08 22:01:41+04:00 yds $
+# $Id: kolchan-up2deb 113 2019-06-08 22:22:01+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-up2deb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-up2deb 111 2019-06-08 22:01:41+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-up2deb 113 2019-06-08 22:22:01+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -129,9 +129,8 @@ kolchan-up2deb::main() {
   cfg.load
 
            s="$( cfg.get     []project   )" &&   sProject=$s
-           s="$( cfg.get     []basebuild )" && sBaseBuild=$s
   pathBuilds="$( cfg.get [path]builds    )" || pathBuilds=~/builds
-  DEBUGLEVEL=$( cfg.get verbosity )
+  DEBUGLEVEL="$( cfg.get verbosity )"
   std::isNumber $DEBUGLEVEL || DEBUGLEVEL=1
   err::debug 1 project configuration $fnConfig
 
@@ -201,7 +200,7 @@ kolchan-up2deb::main() {
 
   if [[ ! $sBaseBuild ]]; then
 
-    if sBaseBuild=$( cfg.get []last succesfully build ); then
+    if ! sBaseBuild=$( cfg.get []last succesfully build ); then
       err::debug 1 "last builded package source ${sBaseBuild} not found or damaged, try search other..."
       [[ -s ${pathBuilds}/${sBaseBuild}/debian/changelog ]] || sBaseBuild=''
     fi
@@ -226,6 +225,7 @@ kolchan-up2deb::main() {
   fi
 
   err::debug 2 "used base build $sBaseBuild for package source $sBuildVersion updating"
+  cfg.set []basebuild = $sBaseBuild
 
   SYS::RSYNC rsync
   rsync.title      = "prepare package source $sBuildVersion for $sProject"
