@@ -1,3 +1,26 @@
+Sun, 09 Jun 2019 00:12:24 +0400
+  New upstream release
+        Version 0.8
+- automake*, build-deb*, uupdeb renamed to kolchan-*:
+  automake.sh  -> kolchan-automake
+  build-deb.sh -> kolchan-builddeb
+  uupdeb       -> kolchan-up2deb
+- added  CLI  options and configuration support, build artifacts saved to config
+  for use by other tools, improved build automation
+- added  libsys.sh  -  rsync  object  implementation,  rsync  code  replaced  by
+  SYS::RSYNC object
+- added debianization infrastructure
+- *-up2deb - select 'dh_make' or 'uupdate' automatically
+- improved  robodoc  EXAMPLE  section - added  reproducible example from scratch
+- improved description and usage information
+- added simple architecture dependency check:
+  *-automake - check  'gcc'  keyword  from  config.log and save boolean value to
+               global section with key 'archindep'
+  *-up2deb   - set dh_make option '-i' if 'archindep' value is 'true'
+- *-builddeb - used mode 'binary' by default, 'binary' mode is transformed to
+               "all" if the 'archindep' option is true, to 'any' otherwise.
+
+
 Wed, 08 May 2019 10:48:30 +0400
 	New upstream release
         Version 0.7
@@ -35,7 +58,7 @@ Fri, 17 Feb 2017 15:36:19 +0400
 Thu, 23 Jun 2016 14:15:53 +0400
 	New upstream release
         Version 0.2
-- added git-add-with-keywords (early gitadd.sh) - wrapper for emulation 
+- added git-add-with-keywords (early gitadd.sh) - wrapper for emulation
   svn-keyword 'Id' by using calculating total count of commits from stdout of
   'git shortlog -s'
 - revision number (count of commits) incremented anticipating the expected commit

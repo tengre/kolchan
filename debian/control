@@ -16,6 +16,6 @@ Description: set of bash(lyk) scripts for development and build packages
   - kolchan-automake - prepare project source with autotools support
   - kolchan-builddeb - wrapper for dpkg-buildpackage
   - kolchan-up2deb   - wrapper for uupdate and dh_make
-  - git-add-id       - wrapper for  'git add <file[s]>' with svn keyword
+  - git-add-id       - wrapper for 'git add <file[s]>' with svn keyword
     'Id' support
 
