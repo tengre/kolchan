@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-automake 111 2019-06-08 22:01:41+04:00 yds $
+# $Id: kolchan-automake 115 2019-06-10 19:00:49+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
@@ -9,7 +9,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-automake::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-automake 111 2019-06-08 22:01:41+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-automake 115 2019-06-10 19:00:49+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -77,15 +77,15 @@ kolchan-automake::main() {
 
   throw on CommandNotFound autoscan autoheader aclocal autoconf autoreconf automake cat cut grep mv pwd robodoc head tr touch sed xargs
 
-  local fn pathSource s sAuthor sProject sVersion
+  local fn pathSource s sAuthor sEmail sFullName sProject sVersion
 
   CFG cfg
   cfg.bind.cli config{c}: help{h} project{p}: path-source{s}: verbosity{v}: version{V}:
 
-  [[ $( cfg.getopt help   ) ]] && kolchan-automake::usage
+  [[ $( cfg.getopt help ) ]] && kolchan-automake::usage
 
-    fnConfig="$( cfg.getopt config  )"
-    sProject="$( cfg.getopt project )"
+    fnConfig="$( cfg.getopt config      )"
+    sProject="$( cfg.getopt project     )"
   pathSource="$( cfg.getopt path-source )"
   : ${sProject:=$PROJECT}
 
@@ -123,9 +123,29 @@ kolchan-automake::main() {
 
   sVersion=$( cfg.get version )
 
-  errorify on CommandNotFound git && : ${sAuthor:="$( git config --get user.name ) <$( git config --get user.email )>"}
+  if hash git 2>/dev/null; then
+    sFullName="$( git config --get user.name  )"
+       sEmail="$( git config --get user.email )"
+  fi
 
-  : ${sAuthor:="${DEBFULLNAME:-$USER} <${DEBEMAIL:-$USER@localhost.localdomain}>"}
+  if   [[ ! $sAuthor && $EMAIL && $NAME ]]; then
+       sEmail="$EMAIL"
+    sFullName="$NAME"
+  elif [[ ! $sAuthor && $sFullName && $sEmail ]]; then
+      sAuthor="$sFullName <${sEmail}>"
+  elif [[ ! $sAuthor && $DEBEMAIL && $DEBFULLNAME ]]; then
+       sEmail="$DEBEMAIL"
+    sFullName="$DEBFULLNAME"
+      sAuthor="$sFullName <${sEmail}>"
+  elif [[ ! $sAuthor && $DEBEMAIL && $DEBFULLNAME ]]; then
+       sEmail="$DEBEMAIL"
+    sFullName="$DEBFULLNAME"
+      sAuthor="$sFullName <${sEmail}>"
+  else
+       sEmail="${USER}@localdomain"
+    sFullName="$USER"
+      sAuthor="$sFullName <${sEmail}>"
+  fi
 
   [[ -s AUTHORS ]] || echo "$sAuthor" > AUTHORS
 
