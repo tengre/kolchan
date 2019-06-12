@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: kolchan-up2deb 114 2019-06-08 22:41:25+04:00 yds $
+# $Id: kolchan-up2deb 117 2019-06-12 14:15:33+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-up2deb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-up2deb 114 2019-06-08 22:41:25+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-up2deb 117 2019-06-12 14:15:33+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -238,6 +238,7 @@ kolchan-up2deb::main() {
   rsync.pathTarget = ${pathBuilds}/${sBuildVersion}
   rsync.onFailure  = throw
   rsync.run
+  rsync.free
 
   err::debug 2 "prepare tar archive of the $sBuildVersion"
   tar cfz ${sBuildVersion}.tar.gz $sBuildVersion || error NotExistNotCreated throw "${sBuildVersion}.tar.gz"
@@ -247,10 +248,32 @@ kolchan-up2deb::main() {
     err::debug 1 "try create package source ${pathBuilds}/${sBuildVersion}"
     cd $sBuildVersion || error NotPermitted throw "${pathBuilds}/${sBuildVersion}"
     [[ $( cfg.get []archindep ) == true ]] && s='i' || s='s'
+    if [[ -d debian ]]; then
+      SYS::RSYNC rsync
+      rsync.title      = "preliminary save debian upstream files"
+      rsync.options    = -arv
+      rsync.pathSource = debian/
+      rsync.pathTarget = debian.upstream/
+      rsync.onFailure  = throw
+      rsync.onSuccess  = rm -r debian
+      rsync.run
+      rsync.free
+    fi
     dh_make -y -${s} -c gpl2 --file ../${sBuildVersion}.tar.gz
     cfg.set [dh_make]status    = $?
     cfg.set [dh_make]timestamp = $( std::date %s )
     cfg.set [path]target       = ${pathBuilds}/${sBuildVersion}
+    if [[ -d debian.upstream ]]; then
+      SYS::RSYNC rsync
+      rsync.title      = "apply debian upstream files"
+      rsync.options    = -arv --exclude changelog
+      rsync.pathSource = debian.upstream/
+      rsync.pathTarget = debian/
+      rsync.onFailure  = throw
+      rsync.onSuccess  = rm -r debian.upstream
+      rsync.run
+      rsync.free
+    fi
 
   else
 
