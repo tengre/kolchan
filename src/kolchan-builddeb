@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-builddeb 111 2019-06-08 22:01:41+04:00 yds $
+# $Id: kolchan-builddeb 118 2019-06-13 11:02:38+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-builddeb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-builddeb 111 2019-06-08 22:01:41+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-builddeb 118 2019-06-13 11:02:38+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -201,8 +201,7 @@ kolchan-builddeb::main() {
 
   done< <( LC_ALL=C dpkg-buildpackage --build=$sMode -rfakeroot 2>&1; echo "return code: $?" )
 
-  err::debug 1 build states:
-  cfg.show
+  err::debug 1 current build status: && cfg.show
   cfg.save
   cfg.free
 

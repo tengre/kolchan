@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: kolchan-up2deb 117 2019-06-12 14:15:33+04:00 yds $
+# $Id: kolchan-up2deb 118 2019-06-13 11:02:38+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-up2deb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-up2deb 117 2019-06-12 14:15:33+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-up2deb 118 2019-06-13 11:02:38+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -262,7 +262,7 @@ kolchan-up2deb::main() {
     dh_make -y -${s} -c gpl2 --file ../${sBuildVersion}.tar.gz
     cfg.set [dh_make]status    = $?
     cfg.set [dh_make]timestamp = $( std::date %s )
-    cfg.set [path]target       = ${pathBuilds}/${sBuildVersion}
+    cfg.set    [path]target    = ${pathBuilds}/${sBuildVersion}
     if [[ -d debian.upstream ]]; then
       SYS::RSYNC rsync
       rsync.title      = "apply debian upstream files"
@@ -309,8 +309,7 @@ kolchan-up2deb::main() {
 
   fi
 
-  err::debug 1 status of the preparation target $sBuildVersion from $sBaseBuild:
-  cfg.show
+  err::debug 1 current build status: && cfg.show
   cfg.save
   cfg.free
 
