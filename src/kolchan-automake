@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-automake 118 2019-06-13 11:02:38+04:00 yds $
+# $Id: kolchan-automake 119 2019-06-13 11:24:27+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
@@ -9,7 +9,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-automake::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-automake 118 2019-06-13 11:02:38+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-automake 119 2019-06-13 11:24:27+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -160,6 +160,7 @@ kolchan-automake::main() {
   cfg.set     []project = $sProject
   cfg.set     []author  = $sAuthor
   cfg.set     []email   = $sEmail
+  cfg.set     []name    = $sFullName
   cfg.set [path]source  = $pathSource
   cfg.save
 

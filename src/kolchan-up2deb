@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: kolchan-up2deb 118 2019-06-13 11:02:38+04:00 yds $
+# $Id: kolchan-up2deb 119 2019-06-13 11:24:27+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-up2deb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-up2deb 118 2019-06-13 11:02:38+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-up2deb 119 2019-06-13 11:24:27+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -239,6 +239,9 @@ kolchan-up2deb::main() {
   rsync.onFailure  = throw
   rsync.run
   rsync.free
+
+  : ${DEBEMAIL:=$( cfg.get []email )}
+  : ${DEBFULLNAME:=$( cfg.get []name )}
 
   err::debug 2 "prepare tar archive of the $sBuildVersion"
   tar cfz ${sBuildVersion}.tar.gz $sBuildVersion || error NotExistNotCreated throw "${sBuildVersion}.tar.gz"
