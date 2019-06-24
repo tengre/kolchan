@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-automake 119 2019-06-13 11:24:27+04:00 yds $
+# $Id: kolchan-automake 122 2019-06-25 01:06:56+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
@@ -9,7 +9,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-automake::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-automake 119 2019-06-13 11:24:27+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-automake 122 2019-06-25 01:06:56+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -77,7 +77,7 @@ kolchan-automake::main() {
 
   throw on CommandNotFound autoscan autoheader aclocal autoconf autoreconf automake cat cut grep mv pwd robodoc head tr touch sed xargs
 
-  local fn pathSource s sAuthor sEmail sFullName sProject sVersion
+  local fn pathSource s sAuthor sEmail sGitTag sFullName sProject sVersion
 
   CFG cfg
   cfg.bind.cli config{c}: help{h} project{p}: path-source{s}: verbosity{v}: version{V}:
@@ -87,6 +87,7 @@ kolchan-automake::main() {
     fnConfig="$( cfg.getopt config      )"
     sProject="$( cfg.getopt project     )"
   pathSource="$( cfg.getopt path-source )"
+    sVersion="$( cfg.getopt version     )"
   : ${sProject:=$PROJECT}
 
   [[ $pathSource && -d $pathSource ]] || pathSource="$( pwd )"
@@ -121,11 +122,11 @@ kolchan-automake::main() {
   std::isNumber $DEBUGLEVEL || DEBUGLEVEL=1
   err::debug 1 project configuration $fnConfig
 
-  sVersion=$( cfg.get version )
-
   if hash git 2>/dev/null; then
     sFullName="$( git config --get user.name  )"
        sEmail="$( git config --get user.email )"
+      sGitTag="$( git tag -l --sort=version:refname | tail -n 1 )"
+
   fi
 
   if   [[ ! $sAuthor && $EMAIL && $NAME ]]; then
@@ -149,12 +150,12 @@ kolchan-automake::main() {
   for fn in NEWS README TODO; do [[ -f $fn ]] || touch $fn; done
 
   : ${sVersion:=$(grep -i version ChangeLog | head -n 1 | xargs | cut -f 2 -d' ')}
+  : ${sVersion:=$( cfg.get version )}
+  [[ $sVersion =~ git.*tag ]] && sVersion=$sGitTag
 
   throw on EmptyVariable sVersion
 
   err::debug 2 project info: name=$sProject version=$sVersion
-
-  sEmail="$(grep -o -E '<.*>' AUTHORS | tr -d '<|>' | head -n 1)"
 
   cfg.set     []version = $sVersion
   cfg.set     []project = $sProject
@@ -182,7 +183,7 @@ kolchan-automake::main() {
 
     git-add-id
     [[ -s VERSION ]] && cfg.set []build version = $( head -n 1 VERSION )
-    cfg.set []git describe = $( git describe )
+                        cfg.set []git describe  = $( git describe )
 
   fi
 
