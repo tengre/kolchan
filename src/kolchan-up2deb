@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Id: kolchan-up2deb 120 2019-06-13 13:52:38+04:00 yds $
+# $Id: kolchan-up2deb 121 2019-06-22 00:01:23+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -11,7 +11,7 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 kolchan-up2deb::usage() {
 
   local rc=$? aId
-  eval "aId=( $Id: kolchan-up2deb 120 2019-06-13 13:52:38+04:00 yds $ )"
+  eval "aId=( $Id: kolchan-up2deb 121 2019-06-22 00:01:23+04:00 yds $ )"
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${0##*/}"                                                         \
@@ -324,7 +324,7 @@ kolchan-up2deb::main() {
   if (( i == 0 )); then
     return 0
   else
-    cd $pathBuilds && rm -rf $s
+    rm -rf ${pathBuilds}/${sBuildVersion}
     return 1
   fi
 
