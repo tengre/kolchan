@@ -5,7 +5,8 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
 #
 #
-eval "__aId=( $Id: git-add-id 102 2019-06-04 01:12:38+04:00 yds $ )"
+eval "__aId=( $Id: git-add-id 125 2019-06-30 19:06:16+04:00 yds $ )"
+eval "__aGd=( $GitId: git-add-id 0.8-10-g277a573 2019-06-30 19:06:16+04:00 yds $ )"
 #
 #
 #
@@ -13,8 +14,9 @@ kolchan::git-add-id::usage() {
 
   local rc=$?
 
-  printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
+  printf -- "\n  %s %s %s %s, (c) %s\n\n"                                      \
             "${0##*/}"                                                         \
+            "${__aGd[2]%%-*}"                                                  \
             "rev${__aId[2]}"                                                   \
             "${__aId[3]}"                                                      \
             "2016-$(std::date %Y)"
@@ -69,9 +71,10 @@ kolchan::git-add-id::usage() {
 #  SOURCE
 gitAddFile() {
 
-  local fmt fn ic ts ui s
+  local fmtG fmtI fn ic ts ui s
 
-  fmt='sed -i -re "s/%sId(.*)?%s/%s/" %s'
+  fmtI='sed -i -re "s/%sId(.*)?%s/%s/" %s'
+  fmtG='sed -i -re "s/%sGitId(.*)?%s/%s/" %s'
 
   : ${bIndexed:=0}
 
@@ -89,10 +92,15 @@ gitAddFile() {
 
   s="$( printf '\044Id: %s %d %s %s \044\n' "$fn" "$ic" "$ts" "$ui" )"
 
-  if ! eval "$( printf "$fmt" '\\\$' '\\\$' '$s' '"$@"')"; then
-
+  if ! eval "$( printf "$fmtI" '\\\$' '\\\$' '$s' '"$@"')"; then
     error warn "$@ - keyword $(printf '\044Id\044') not modified.."
+  fi
 
+  if [[ $sGitDescribe ]]; then
+    s="$( printf '\044GitId: %s %s %s %s \044\n' "$fn" "$sGitDescribe" "$ts" "$ui" )"
+    if ! eval "$( printf "$fmtG" '\\\$' '\\\$' '$s' '"$@"')"; then
+      error warn "$@ - keyword $(printf '\044GitId\044') not modified.."
+    fi
   fi
 
   if git add "$@"; then
@@ -115,7 +123,7 @@ kolchan::git-add-id::main() {
 
   throw on CommandNotFound bc date git grep id sed xargs
 
-  local bIndexed i tsIndexed s
+  local bIndexed i tsIndexed s sGitDescribe
 
   ## TODO use CLI options
   eval set -- "$( _ sArg )"
@@ -140,6 +148,7 @@ kolchan::git-add-id::main() {
 
   else
 
+    sGitDescribe=$( git describe )
     i="$( exec -c git shortlog -s | grep -o '[[:digit:]]*' | xargs | tr ' ' '+' | bc )"
 
     if ! std::isNumber $i; then
