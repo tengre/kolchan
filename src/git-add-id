@@ -3,22 +3,17 @@
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
-#
-#
-eval "__aId=( $Id: git-add-id 125 2019-06-30 19:06:16+04:00 yds $ )"
-eval "__aGd=( $GitId: git-add-id 0.8-10-g277a573 2019-06-30 19:06:16+04:00 yds $ )"
-#
-#
+# $GitId: git-add-id 0.8-11-g229cd33-126 2019-07-01 22:12:23+04:00 yds $
 #
 kolchan::git-add-id::usage() {
 
-  local rc=$?
+  local rc=$? dt="$( stat -c %y $0 )"
+  local -a a=( $(grep -o "$(printf -- '\044')GitId: .*$(printf -- '\044')" $0 | head -n 1) )
 
-  printf -- "\n  %s %s %s %s, (c) %s\n\n"                                      \
-            "${0##*/}"                                                         \
-            "${__aGd[2]%%-*}"                                                  \
-            "rev${__aId[2]}"                                                   \
-            "${__aId[3]}"                                                      \
+  printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
+            "${a[1]:=${0##*/}}"                                                \
+            "${a[2]:=?}"                                                       \
+            "${a[3]:=${dt%% *}}"                                               \
             "2016-$(std::date %Y)"
 
 #****h* kolchan/git-add-id
@@ -97,7 +92,7 @@ gitAddFile() {
   fi
 
   if [[ $sGitDescribe ]]; then
-    s="$( printf '\044GitId: %s %s %s %s \044\n' "$fn" "$sGitDescribe" "$ts" "$ui" )"
+    s="$( printf '\044GitId: %s %s %s %s \044\n' "$fn" "${sGitDescribe}-${ic}" "$ts" "$ui" )"
     if ! eval "$( printf "$fmtG" '\\\$' '\\\$' '$s' '"$@"')"; then
       error warn "$@ - keyword $(printf '\044GitId\044') not modified.."
     fi
@@ -121,7 +116,7 @@ gitAddFile() {
 #******
 kolchan::git-add-id::main() {
 
-  throw on CommandNotFound bc date git grep id sed xargs
+  throw on CommandNotFound bc date head git grep id sed stat xargs
 
   local bIndexed i tsIndexed s sGitDescribe
 
