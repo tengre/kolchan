@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-automake 122 2019-06-25 01:06:56+04:00 yds $
+# $Git: kolchan-automake 0.8-13-gd7d2dbd-128 2019-07-05 17:02:04+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
@@ -8,13 +8,13 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
 kolchan-automake::usage() {
 
-  local rc=$? aId
-  eval "aId=( $Id: kolchan-automake 122 2019-06-25 01:06:56+04:00 yds $ )"
+  local rc=$? dt="$( stat -c %y $0 )" S="$( exec -c printf -- '\044')"
+  local -a a=( $(grep -o "${S}Git: .*${S}" $0 | head -n 1) )
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
-            "${0##*/}"                                                         \
-            "rev${aId[2]}"                                                     \
-            "${aId[3]}"                                                        \
+            "${a[1]:=${0##*/}}"                                                \
+            "${a[2]:=?}"                                                       \
+            "${a[3]:=${dt%% *}}"                                               \
             "2016-$(std::date %Y)"
 
 #****h* kolchan/kolchan-automake

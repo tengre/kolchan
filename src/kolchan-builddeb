@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Id: kolchan-builddeb 118 2019-06-13 11:02:38+04:00 yds $
+# $Git: kolchan-builddeb 0.8-13-gd7d2dbd-128 2019-07-05 17:03:46+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -10,13 +10,13 @@ _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
 kolchan-builddeb::usage() {
 
-  local rc=$? aId
-  eval "aId=( $Id: kolchan-builddeb 118 2019-06-13 11:02:38+04:00 yds $ )"
+  local rc=$? dt="$( stat -c %y $0 )" S="$( exec -c printf -- '\044')"
+  local -a a=( $(grep -o "${S}Git: .*${S}" $0 | head -n 1) )
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
-            "${0##*/}"                                                         \
-            "rev${aId[2]}"                                                     \
-            "${aId[3]}"                                                        \
+            "${a[1]:=${0##*/}}"                                                \
+            "${a[2]:=?}"                                                       \
+            "${a[3]:=${dt%% *}}"                                               \
             "2016-$(std::date %Y)"
 
 #****h* kolchan/kolchan-builddeb
