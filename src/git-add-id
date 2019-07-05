@@ -3,12 +3,12 @@
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
-# $GitId: git-add-id 0.8-11-g229cd33-126 2019-07-01 22:12:23+04:00 yds $
+# $Git: git-add-id 0.8-12-g2406cf0-127 2019-07-05 16:43:07+04:00 yds $
 #
 kolchan::git-add-id::usage() {
 
-  local rc=$? dt="$( stat -c %y $0 )"
-  local -a a=( $(grep -o "$(printf -- '\044')GitId: .*$(printf -- '\044')" $0 | head -n 1) )
+  local rc=$? dt="$( stat -c %y $0 )" S="$( exec -c printf -- '\044')"
+  local -a a=( $(grep -o "${S}Git: .*${S}" $0 | head -n 1) )
 
   printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
             "${a[1]:=${0##*/}}"                                                \
@@ -19,12 +19,15 @@ kolchan::git-add-id::usage() {
 #****h* kolchan/git-add-id
 	cat <<-EOF | tr -d '#'
 #  DESCRIPTION
-#    Easy  way  to  emulate  SVN  keywords  without  using git hooks. Currently,
-#    compound  keyword "Id" handled only. Revision number (aka "Rev") is a total
-#    number  of completed commits plus one as the expected next commit. "Author"
-#    part  of  the  "Id"  is a system name of the current user (id -nu ). May be
-#    overloaded  by  special  option  "user.id" from git config, but like single
-#    word only. Keyword "Id" value is updated before adding to the git index.
+#    Easy  way  to  emulate  compound  SVN keyword "Id" without using git hooks.
+#    The  “Revision” part (aka “Rev”) of the keyword “Id” is the total number of
+#    completed  commits plus one expected next commit. "Author" part of the "Id"
+#    is  the  system  name  of  the current user (id -nu ). May be overloaded by
+#    special  option  "user.id"  from git config, but like single word only. The
+#    "Id" value is updated before adding to the git index.
+#    Additionally,  the  "Git" keyword is processed, which differs from the "Id"
+#    in  that  the output of the "git describe" command is added to the revision
+#    value.
 #  USAGE
 #    git-add-id [ -h|--help ] | [<files> ...]
 #  ARGUMENTS
@@ -39,12 +42,12 @@ kolchan::git-add-id::usage() {
 #    Damir Sh. Yakupov <yds@bk.ru>
 #  EXAMPLE
 #    git init
-#    echo '$(printf '\044Id\044')' > git-add-id.txt
+#    echo '${S}Id${S}' > git-add-id.txt
 #    git-add-id git-add-id.txt
 #    output: try add to index with Revision 1:
 #    output: added to index  .. "git-add-id.txt"
 #    cat git-add-id.txt
-#    output: $(printf '\044Id') git-add-id.txt 1 $( date --rfc-3339=s ) $( id -nu ) $(printf '\044')
+#    output: ${S}Id git-add-id.txt 1 $(exec -c date --rfc-3339=s) $(id -nu) $S
 	EOF
 
   exit $rc
@@ -69,7 +72,7 @@ gitAddFile() {
   local fmtG fmtI fn ic ts ui s
 
   fmtI='sed -i -re "s/%sId(.*)?%s/%s/" %s'
-  fmtG='sed -i -re "s/%sGitId(.*)?%s/%s/" %s'
+  fmtG='sed -i -re "s/%sGit(.*)?%s/%s/" %s'
 
   : ${bIndexed:=0}
 
@@ -92,9 +95,9 @@ gitAddFile() {
   fi
 
   if [[ $sGitDescribe ]]; then
-    s="$( printf '\044GitId: %s %s %s %s \044\n' "$fn" "${sGitDescribe}-${ic}" "$ts" "$ui" )"
+    s="$( printf '\044Git: %s %s %s %s \044\n' "$fn" "${sGitDescribe}-${ic}" "$ts" "$ui" )"
     if ! eval "$( printf "$fmtG" '\\\$' '\\\$' '$s' '"$@"')"; then
-      error warn "$@ - keyword $(printf '\044GitId\044') not modified.."
+      error warn "$@ - keyword $(printf '\044Git\044') not modified.."
     fi
   fi
 
@@ -143,7 +146,7 @@ kolchan::git-add-id::main() {
 
   else
 
-    sGitDescribe=$( git describe )
+    sGitDescribe=$( exec -c git describe 2>/dev/null )
     i="$( exec -c git shortlog -s | grep -o '[[:digit:]]*' | xargs | tr ' ' '+' | bc )"
 
     if ! std::isNumber $i; then
