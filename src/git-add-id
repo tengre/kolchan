@@ -3,7 +3,7 @@
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
-# $Git: git-add-id 0.8-12-g2406cf0-127 2019-07-05 16:43:07+04:00 yds $
+# $Git: git-add-id 0.8-14-g12e2300-129 2019-07-14 18:55:55+04:00 yds $
 #
 kolchan::git-add-id::usage() {
 
@@ -56,12 +56,13 @@ kolchan::git-add-id::usage() {
 #******
 #****f* git-add-id/gitAddFile
 #  USAGE
-#    gitAddFile <revision> <file>
+#    gitAddFile <revision> <git revision> <file>
 #  DESCRIPTION
-#    modify existing in the <file> keyword "Id" with <revision> and add this
-#    file to the git index
+#    modify  existing in the <file> keyword "Id" and/or "Git" with special value
+#    and add this file to the git index
 #  ARGUMENTS
-#    <revision>      - usually summary commits number from 'git status -s'
+#    <revision>      - usually total commits from 'git status -s' or 0
+#    <git revision>  - git describe output with total commits or initial value
 #    <file>          - target file for updating and indexing
 #  ERRORS
 #    NoSuchFileOrDir - <file> not found
@@ -69,43 +70,43 @@ kolchan::git-add-id::usage() {
 #  SOURCE
 gitAddFile() {
 
-  local fmtG fmtI fn ic ts ui s
+  local fmtG fmtI fn g i t u s
 
   fmtI='sed -i -re "s/%sId(.*)?%s/%s/" %s'
   fmtG='sed -i -re "s/%sGit(.*)?%s/%s/" %s'
 
   : ${bIndexed:=0}
 
-  ic=$1
-  shift
+  i=$1
+  g=$2
+  shift 2
 
   errorify on NoSuchFile $* || error warn+return "${*:-no arguments} - file expected.."
 
   fn="${@##*/}"
-  ts="$( date --rfc-3339=s )"
-  ui="$( git config --get user.id )"
-  [[ $ui && ! $ui =~ [[:space:]] ]] || ui="$( _ sUser )"
+   t="$( date --rfc-3339=s )"
+   u="$( git config --get user.id )"
 
-  throw on EmptyVariable fn ic ts ui
+  [[ $u && ! $u =~ [[:space:]] ]] || u="$( _ sUser )"
 
-  s="$( printf '\044Id: %s %d %s %s \044\n' "$fn" "$ic" "$ts" "$ui" )"
+  throw on EmptyVariable fn g i t u
+
+  s="$( printf '\044Id: %s %d %s %s \044\n' "$fn" "$i" "$t" "$u" )"
 
   if ! eval "$( printf "$fmtI" '\\\$' '\\\$' '$s' '"$@"')"; then
     error warn "$@ - keyword $(printf '\044Id\044') not modified.."
   fi
 
-  if [[ $sGitDescribe ]]; then
-    s="$( printf '\044Git: %s %s %s %s \044\n' "$fn" "${sGitDescribe}-${ic}" "$ts" "$ui" )"
-    if ! eval "$( printf "$fmtG" '\\\$' '\\\$' '$s' '"$@"')"; then
-      error warn "$@ - keyword $(printf '\044Git\044') not modified.."
-    fi
+  s="$( printf '\044Git: %s %s %s %s \044\n' "$fn" "${g}-${i}" "$t" "$u" )"
+  if ! eval "$( printf "$fmtG" '\\\$' '\\\$' '$s' '"$@"')"; then
+    error warn "$@ - keyword $(printf '\044Git\044') not modified.."
   fi
 
   if git add "$@"; then
 
     s="added to index "
     bIndexed=$(( bIndexed +1 ))
-    tsIndexed=$ts
+    tsIndexed=$t
 
   else
 
@@ -119,9 +120,9 @@ gitAddFile() {
 #******
 kolchan::git-add-id::main() {
 
-  throw on CommandNotFound bc date head git grep id sed stat xargs
+  throw on CommandNotFound date head git grep id sed stat xargs
 
-  local bIndexed i tsIndexed s sGitDescribe
+  local bIndexed iCommits tsIndexed s sGit
 
   ## TODO use CLI options
   eval set -- "$( _ sArg )"
@@ -142,32 +143,43 @@ kolchan::git-add-id::main() {
   if LC_ALL=C git log 2>&1 | grep '^fatal:.* not have any commits' >/dev/null;
   then
 
-    i=0
+    iCommits=0
 
   else
 
-    sGitDescribe=$( exec -c git describe 2>/dev/null )
-    i="$( exec -c git shortlog -s | grep -o '[[:digit:]]*' | xargs | tr ' ' '+' | bc )"
+    iCommits=$((
+      $(
+        exec -c git shortlog -s          |
+          exec -c grep -o '[[:digit:]]*' |
+            exec -c xargs                |
+              exec -c tr ' ' '+'
+      )
+    ))
 
-    if ! std::isNumber $i; then
-      [[ $PRJ_COMMITS ]] && i=$PRJ_COMMITS
+    if ! std::isNumber $iCommits; then
+      [[ $PRJ_COMMITS ]] && iCommits=$PRJ_COMMITS
     fi
 
   fi
 
-  err::debug 0 "timestamp $tsIndexed :: total commits $i"
+  std::isNumber $iCommits ||
+    error NotNumber throw "$iCommits - summary of the commits expected"
 
-  std::isNumber $i || error NotNumber throw "$i - summary of the commits expected"
+  iCommits=$(( iCommits+1 ))
 
-  i=$(( i+1 ))
+  sGit=$(
+    git describe 2>/dev/null ||
+    echo "0.0-${iCommits:-0}-$(git log -1 --pretty=format:"%h")-${iCommits:-0}"
+  )
 
-  err::debug 0 "try add to index with Revision ${i}:"
+  err::debug 2 "timestamp $tsIndexed | total commits $iCommits | git rev $sGit"
+  err::debug 0 "try add to index with Revision ${iCommits}:"
 
   if [[ $@ ]]; then
 
     for s in "$@"; do
 
-      gitAddFile $i "$s"
+      gitAddFile "$iCommits" "$sGit" "$s"
 
     done
 
@@ -177,7 +189,7 @@ kolchan::git-add-id::main() {
 
       if   [[ $s =~ ^@@ ]]; then
 
-        gitAddFile $i "${s#@@*}"
+        gitAddFile "$iCommits" "$sGit" "${s#@@*}"
 
       elif [[ $s =~ ^M[^M][[:space:]](.*)$ ]]; then
 
@@ -191,14 +203,14 @@ kolchan::git-add-id::main() {
 
   if [[ -f ChangeLog ]]; then
 
-    (( bIndexed == 0 )) && i=$(( i - 1 ))
+    (( bIndexed == 0 )) && iCommits=$(( iCommits - 1 ))
 
     printf -- "%s %d %s\n"                                                     \
               "$(                                                              \
                   sed -n "3p" ChangeLog |                                      \
                     sed -e "s/[[:space:]]*Version[[:space:]]*//i"              \
               )"                                                               \
-              "$i" "$tsIndexed" > VERSION
+              "$iCommits" "$tsIndexed" > VERSION
 
   fi
 
