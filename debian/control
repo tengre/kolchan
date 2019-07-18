@@ -10,7 +10,7 @@ Homepage: https://github.com/tengre/kolchan/
 
 Package: kolchan
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}, debhelper (>= 10), autotools-dev, xsltproc, robodoc, docbook-xsl, automake, patch
+Depends: ${shlibs:Depends}, ${misc:Depends}, debhelper (>= 10), autotools-dev, devscripts, rsync, git, dpkg-dev, xsltproc, robodoc, docbook-xsl, automake, patch
 Description: set of bash(lyk) scripts for development and build packages
  package included next tools:
   - kolchan-automake - prepare project source with autotools support

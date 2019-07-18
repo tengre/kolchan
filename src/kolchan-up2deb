@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Git: kolchan-up2deb 0.8-13-gd7d2dbd-128 2019-07-05 17:05:16+04:00 yds $
+# $Git: kolchan-up2deb 0.8-16-g4fc9e75-131 2019-07-19 01:53:56+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -81,7 +81,7 @@ kolchan-up2deb::usage() {
 #
 kolchan-up2deb::main() {
 
-  throw on CommandNotFound bc git grep head ls mv uupdate tail tar tr xargs
+  throw on CommandNotFound git grep head ls mv uupdate tail tar tr xargs
 
   local -a a
   local fn fnConfig i iBuildNumber pathBuilds pathSource pathWork s sBaseBuild sBuildVersion sProject sVersion
@@ -159,7 +159,14 @@ kolchan-up2deb::main() {
   if (( $? != 128 )) && ! LC_ALL=C git log 2>&1 | grep '^fatal:.* not have any commits' >/dev/null
   then
 
-    iBuildNumber=$( git shortlog -s | grep -oP '^\s+\d+\s+' | xargs | tr ' ' '+' | bc )
+    iBuildNumber=$((
+      $(
+        exec -c git shortlog -s          |
+          exec -c grep -o '[[:digit:]]*' |
+            exec -c xargs                |
+              exec -c tr ' ' '+'
+      )
+    ))
 
     if ! std::isNumber $iBuildNumber; then
       [[ $PRJ_COMMITS ]] && iBuildNumber=$PRJ_COMMITS
