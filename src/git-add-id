@@ -3,7 +3,7 @@
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
-# $Git: git-add-id 0.8-14-g12e2300-129 2019-07-14 18:55:55+04:00 yds $
+# $Git: git-add-id 0.8-18-132 2019-10-19 20:09:30+04:00 yds $
 #
 kolchan::git-add-id::usage() {
 
@@ -23,17 +23,17 @@ kolchan::git-add-id::usage() {
 #    The  “Revision” part (aka “Rev”) of the keyword “Id” is the total number of
 #    completed  commits plus one expected next commit. "Author" part of the "Id"
 #    is  the  system  name  of  the current user (id -nu ). May be overloaded by
-#    special  option  "user.id"  from git config, but like single word only. The
-#    "Id" value is updated before adding to the git index.
-#    Additionally,  the  "Git" keyword is processed, which differs from the "Id"
-#    in  that  the output of the "git describe" command is added to the revision
-#    value.
+#    special  option  "user.id"  from  git config, but like single word only for
+#    compatibility. The  "Id"  value  is updated before adding to the git index.
+#    In  addition  to  "Id",  the  "Git"  keyword  is  processed, which uses the
+#    combination  of  the  last tag, the number of commits after it is declared,
+#    and the total number of commits
 #  USAGE
 #    git-add-id [ -h|--help ] | [<files> ...]
 #  ARGUMENTS
 #    -h, --help - show this usage and exit
 #    <files>    - files for forced addition to the git index with updating the
-#                 keyword "Id" (if needed)
+#                 keyword(s) "Id"/"Git" (if needed)
 #                 The default (no arguments) - added only modified files, which
 #                 are already included to the git repository.
 #  USES
@@ -121,7 +121,6 @@ gitAddFile() {
 kolchan::git-add-id::main() {
 
   throw on CommandNotFound date head git grep id sed stat xargs
-
   local bIndexed iCommits tsIndexed s sGit
 
   ## TODO use CLI options
@@ -149,10 +148,10 @@ kolchan::git-add-id::main() {
 
     iCommits=$((
       $(
-        exec -c git shortlog -s          |
-          exec -c grep -o '[[:digit:]]*' |
-            exec -c xargs                |
-              exec -c tr ' ' '+'
+         exec -c git shortlog -s          |
+           exec -c grep -o '[[:digit:]]*' |
+             xargs                        |
+               exec -c tr ' ' '+'
       )
     ))
 
@@ -168,8 +167,12 @@ kolchan::git-add-id::main() {
   iCommits=$(( iCommits+1 ))
 
   sGit=$(
-    git describe 2>/dev/null ||
-    echo "0.0-${iCommits:-0}-$(git log -1 --pretty=format:"%h")-${iCommits:-0}"
+    if a=$( git describe --long 2>/dev/null ); then
+      a=( ${a//-/ } )
+      echo "${a[0]}-$(( ${a[1]} + 1 ))"
+    else
+      echo "0.0-0"
+    fi
   )
 
   err::debug 2 "timestamp $tsIndexed | total commits $iCommits | git rev $sGit"
