@@ -3,7 +3,7 @@
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
-# $Git: git-add-id 0.8-18-132 2019-10-19 20:09:30+04:00 yds $
+# $Git: git-add-id 0.8-114-21 2020-01-27 00:10:10+04:00 yds $
 #
 kolchan::git-add-id::usage() {
 
@@ -22,12 +22,12 @@ kolchan::git-add-id::usage() {
 #    Easy  way  to  emulate  compound  SVN keyword "Id" without using git hooks.
 #    The  “Revision” part (aka “Rev”) of the keyword “Id” is the total number of
 #    completed  commits plus one expected next commit. "Author" part of the "Id"
-#    is  the  system  name  of  the current user (id -nu ). May be overloaded by
+#    is  the  system  name  of  the current user (id -nu).  May be overloaded by
 #    special  option  "user.id"  from  git config, but like single word only for
 #    compatibility. The  "Id"  value  is updated before adding to the git index.
 #    In  addition  to  "Id",  the  "Git"  keyword  is  processed, which uses the
-#    combination  of  the  last tag, the number of commits after it is declared,
-#    and the total number of commits
+#    combination of the actual tag (version), the total number of commits before
+#     setting the actual tag and the number of commits of the actual tag.
 #  USAGE
 #    git-add-id [ -h|--help ] | [<files> ...]
 #  ARGUMENTS
@@ -81,7 +81,8 @@ gitAddFile() {
   g=$2
   shift 2
 
-  errorify on NoSuchFile $* || error warn+return "${*:-no arguments} - file expected.."
+  errorify on NoSuchFile $* ||
+    error warn+return "${*:-no arguments} - file expected.."
 
   fn="${@##*/}"
    t="$( date --rfc-3339=s )"
@@ -97,7 +98,7 @@ gitAddFile() {
     error warn "$@ - keyword $(printf '\044Id\044') not modified.."
   fi
 
-  s="$( printf '\044Git: %s %s %s %s \044\n' "$fn" "${g}-${i}" "$t" "$u" )"
+  s="$( printf '\044Git: %s %s %s %s \044\n' "$fn" "${g}" "$t" "$u" )"
   if ! eval "$( printf "$fmtG" '\\\$' '\\\$' '$s' '"$@"')"; then
     error warn "$@ - keyword $(printf '\044Git\044') not modified.."
   fi
@@ -132,7 +133,10 @@ kolchan::git-add-id::main() {
 
   if (( $? == 128 )); then
 
-    err::debugf 0 "\n  [!]Warn: git repository (or any of the parent directories): .git not found..\n  show usage by --help option..\n"
+    err::debugf 0 "\n  %s: %s\n  %s\n"                                         \
+                  "Error: git repository (or any of the parent directories):"  \
+                  ".git not found.."                                           \
+                  "show usage by --help option.."
     return 128
 
   fi
@@ -166,14 +170,20 @@ kolchan::git-add-id::main() {
 
   iCommits=$(( iCommits+1 ))
 
-  sGit=$(
-    if a=$( git describe --long 2>/dev/null ); then
-      a=( ${a//-/ } )
-      echo "${a[0]}-$(( ${a[1]} + 1 ))"
-    else
-      echo "0.0-0"
-    fi
-  )
+  if a=$( git describe --long 2>/dev/null ); then
+    a=( ${a//-/ } )
+    iTag=$((${a[$((${#a[@]}-2))]}+1))
+    std::isNumber $iTag || iTag='1'
+    unset a[$((${#a[@]}-1))]
+    unset a[$((${#a[@]}-1))]
+    sTag="${a[@]}"
+    sTag="${sTag// /-}"
+  else
+    iTag='1'
+    sTag='0.0'
+  fi
+
+  sGit="${sTag}-$((iCommits-iTag))-${iTag}"
 
   err::debug 2 "timestamp $tsIndexed | total commits $iCommits | git rev $sGit"
   err::debug 0 "try add to index with Revision ${iCommits}:"
