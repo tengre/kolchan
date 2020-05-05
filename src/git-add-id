@@ -3,7 +3,7 @@
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
-# $Git: git-add-id 0.8-114-21 2020-01-27 00:10:10+04:00 yds $
+# $Git: git-add-id 0.8-114-22 2020-05-05 14:35:37+04:00 dsyakupo $
 #
 kolchan::git-add-id::usage() {
 
@@ -218,12 +218,12 @@ kolchan::git-add-id::main() {
 
     (( bIndexed == 0 )) && iCommits=$(( iCommits - 1 ))
 
-    printf -- "%s %d %s\n"                                                     \
-              "$(                                                              \
-                  sed -n "3p" ChangeLog |                                      \
-                    sed -e "s/[[:space:]]*Version[[:space:]]*//i"              \
-              )"                                                               \
-              "$iCommits" "$tsIndexed" > VERSION
+    if [[ $sGit ]]; then
+      s=${sGit//-/.}
+    else
+      s="$(sed -n "3p" ChangeLog | sed -e "s/[[:space:]]*Version[[:space:]]*//i")"
+    fi
+    printf -- "%s %d %s\n" "$s" "$iCommits" "$tsIndexed" > VERSION
 
   fi
 

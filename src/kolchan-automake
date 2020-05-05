@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Git: kolchan-automake 0.8-13-gd7d2dbd-128 2019-07-05 17:02:04+04:00 yds $
+# $Git: kolchan-automake 0.8-114-22 2020-05-05 14:47:04+04:00 dsyakupo $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
@@ -123,9 +123,9 @@ kolchan-automake::main() {
   err::debug 1 project configuration $fnConfig
 
   if hash git 2>/dev/null; then
-    sFullName="$( git config --get user.name  )"
-       sEmail="$( git config --get user.email )"
-      sGitTag="$( git tag -l --sort=version:refname | tail -n 1 )"
+    sFullName="$( git config   --get user.name  )"
+       sEmail="$( git config   --get user.email )"
+      sGitTag="$( git describe --abbrev=0 )"
 
   fi
 
