@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Git: kolchan-automake 0.8-114-22 2020-05-05 14:47:04+04:00 dsyakupo $
+# $Git: kolchan-automake 0.8-114-25 2022-06-13 14:15:54+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
@@ -35,6 +35,11 @@ kolchan-automake::usage() {
 #                               the configuration file name.
 #    -s, --path-source <path> - select source path. Maybe read from config file.
 #                               Default is a current directory.
+#    -N, --noscan             - disable autoscan for preliminary configuration,
+#                               this is default.
+#    -Y, --scan               - enable autoscan for preliminary configuration.
+#                               Warning:  may  include  unwanted dependencies of
+#                               external modules, e.g. from node_modules
 #    -v, --verbosity <number> - set DEBUGLEVEL for debug messages
 #    -V, --version ...        - set version for source
 #  USES
@@ -52,7 +57,8 @@ kolchan-automake::usage() {
 #	cat <<- HELLOWORLD > hello_world.c
 #	#include <stdio.h>
 #	int main() {
-#		printf( "%s\n", "hello, world!" );
+#		printf("Hello, World!\n");
+#		return 0;
 #	}
 #	HELLOWORLD
 #	cat <<- CHANGELOG > ChangeLog
@@ -70,17 +76,45 @@ kolchan-automake::usage() {
 
 }
 #******
+#****f* kolchan/kolchan-automake::scanConfigFiles
+#  DESCRIPTION
+#    generate AC_CONFIG_FILES options as autoscan
+#
+kolchan-automake::scanConfigFiles(){
+  local head='AC_CONFIG_FILES(['
+  local tail='])'
+  local form="$(eval 'printf -- "%${#head}s"')"
+  local bool s
+  local -a a=("programs" "libraries" "header files" "typedefs, structures, and compiler characteristics" "library functions")
+
+  for s in "${a[@]}"; do
+    printf -- "\n# Checks for %s.\n" "$s"
+  done
+
+  printf -- "\n%s" "$head"
+  while read s; do
+    if [[ ! $bool ]]; then
+      printf -- "%s" "$s"
+      bool=1
+      continue
+    fi
+    printf -- "\n%s%s" "$form" "$s"
+  ## sort order from https://cutt.ly/TJ2xSfI
+  done< <(find . -name Makefile.am -type f -printf '%h\0%d\0%p\n' | sort -t '\0' -n | awk -F '\0' '{print $3}' | sed -r -e "s/^\.\/(.*Makefile)\.am$/\1/g")
+  printf -- "%s\n%s\n" "$tail" "AC_OUTPUT"
+}
+#******
 #
 #
 #
 kolchan-automake::main() {
 
-  throw on CommandNotFound autoscan autoheader aclocal autoconf autoreconf automake cat cut grep mv pwd robodoc head tr touch sed xargs
+  throw on CommandNotFound aclocal autoscan autoheader autoconf autoreconf automake awk cat cut find grep mv pwd robodoc head tr touch sed xargs
 
   local fn pathSource s sAuthor sEmail sGitTag sFullName sProject sVersion
 
   CFG cfg
-  cfg.bind.cli config{c}: help{h} project{p}: path-source{s}: verbosity{v}: version{V}:
+  cfg.bind.cli config{c}: help{h} noscan{N} project{p}: path-source{s}: scan{Y} verbosity{v}: version{V}:
 
   [[ $( cfg.getopt help ) ]] && kolchan-automake::usage
 
@@ -88,6 +122,8 @@ kolchan-automake::main() {
     sProject="$( cfg.getopt project     )"
   pathSource="$( cfg.getopt path-source )"
     sVersion="$( cfg.getopt version     )"
+      noscan="$( cfg.getopt noscan      )"
+
   : ${sProject:=$PROJECT}
 
   [[ $pathSource && -d $pathSource ]] || pathSource="$( pwd )"
@@ -118,32 +154,38 @@ kolchan-automake::main() {
 
   cfg.load
 
+  sFullName="$( cfg.get name  )"
+     sEmail="$( cfg.get email )"
+       scan="$( cfg.get scan  )"
+
+  [[ ! $noscan && $scan =~ 1|true ]] && scan=true || scan=false
+
   DEBUGLEVEL=$( cfg.get verbosity )
   std::isNumber $DEBUGLEVEL || DEBUGLEVEL=1
   err::debug 1 project configuration $fnConfig
 
   if hash git 2>/dev/null; then
-    sFullName="$( git config   --get user.name  )"
-       sEmail="$( git config   --get user.email )"
+    sFullName="$( git config --get user.name  )"
+       sEmail="$( git config --get user.email )"
       sGitTag="$( git describe --abbrev=0 )"
-
   fi
 
-  if   [[ ! $sAuthor && $EMAIL && $NAME ]]; then
+  #set force email and fullname via env
+  if   [[ $EMAIL && $NAME ]]; then
        sEmail="$EMAIL"
     sFullName="$NAME"
-      sAuthor="$sFullName <${sEmail}>"
-  elif [[ ! $sAuthor && $sFullName && $sEmail ]]; then
-      sAuthor="$sFullName <${sEmail}>"
-  elif [[ ! $sAuthor && $DEBEMAIL && $DEBFULLNAME ]]; then
-       sEmail="$DEBEMAIL"
-    sFullName="$DEBFULLNAME"
-      sAuthor="$sFullName <${sEmail}>"
-  else
-       sEmail="${USER}@localdomain"
-    sFullName="$USER"
-      sAuthor="$sFullName <${sEmail}>"
+  elif [[ $DEBEMAIL && $DEBFULLNAME ]]; then
+    : ${sEmail:-"$DEBEMAIL"}
+    : ${sFullName:-"$DEBFULLNAME"}
   fi
+
+  : ${sEmail:-${USER}@localdomain}
+  : ${sFullName:-$USER}
+
+     sEmail="$(std::trim $sEmail)"
+  sFullName="$(std::trim $sFullName)"
+
+  sAuthor="$sFullName <${sEmail}>"
 
   [[ -s AUTHORS ]] || echo "$sAuthor" > AUTHORS
 
@@ -163,11 +205,25 @@ kolchan-automake::main() {
   cfg.set     []email   = $sEmail
   cfg.set     []name    = $sFullName
   cfg.set [path]source  = $pathSource
+
   cfg.save
 
+  ## TODO - ignore external configurations, for example node_modules/*Makefile
+  rm -f configure.ac
   autoscan
   cfg.set [autotools]autoscan = $?
-  mv configure.scan configure.ac || throw on NoSuchFile configure.ac
+  if [[ -f configure.scan ]]; then
+    if [[ $scan == 'true' ]]; then
+      err::debug 1 full autoscan
+      mv -f configure.scan configure.ac
+    else
+      grep -Pv '^(#|$)' configure.scan | head -n 2 > configure.ac
+      kolchan-automake::scanConfigFiles >> configure.ac
+      rm -f configure.scan
+    fi
+  fi
+
+  throw on NoSuchFile configure.ac
 
   autoheader
   cfg.set [autotools]autoheader = $?
@@ -204,7 +260,10 @@ kolchan-automake::main() {
 
   fi
 
-  cfg.set [autotools]timestamp = $( std::date %s )
+  cfg.set []scan   = $scan
+  cfg.set []noscan = ''
+
+  cfg.set [autotools]timestamp = $( std::date %Y-%m-%dT%H:%M:%S%z )
   err::debug 1 current build status: && cfg.show
   cfg.save
   cfg.free

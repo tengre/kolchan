@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Git: kolchan-builddeb 0.8-13-gd7d2dbd-128 2019-07-05 17:03:46+04:00 yds $
+# $Git: kolchan-builddeb 0.8-114-25 2022-06-13 14:23:02+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -54,7 +54,8 @@ kolchan-builddeb::usage() {
 #	cat <<- HELLOWORLD > hello_world.c
 #	#include <stdio.h>
 #	int main() {
-#		printf( "%s\n", "hello, world!" );
+#		printf("Hello, World!\n");
+#		return 0;
 #	}
 #	HELLOWORLD
 #	cat <<- CHANGELOG > ChangeLog
@@ -193,7 +194,7 @@ kolchan-builddeb::main() {
         cfg.set []last succesfully build = ${pathTarget##*/}
         echo "ok!"
       fi
-      cfg.set [$sMode]timestamp = $( std::date %s )
+      cfg.set [$sMode]timestamp = $( std::date %Y-%m-%dT%H:%M:%S%z )
     else
       echo $REPLY >> $fn
       echo -n '.'
