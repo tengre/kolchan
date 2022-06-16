@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Git: kolchan-automake 0.8-114-25 2022-06-13 14:15:54+04:00 yds $
+# $Git: kolchan-automake 0.8-114-26 2022-06-16 14:15:45+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
@@ -18,7 +18,7 @@ kolchan-automake::usage() {
             "2016-$(std::date %Y)"
 
 #****h* kolchan/kolchan-automake
-	cat <<-EOF | tr -d '#'
+	cat <<-EOF | sed -r -e "s/^#\t?//g"
 #  DESCRIPTION
 #    building a project using autotools based on the prepared Automake.am files
 #    in each subdirectory. ChangeLog file is also required. Supported format:
@@ -67,8 +67,8 @@ kolchan-automake::usage() {
 #	Version 0.01
 #	CHANGELOG
 #
-#	hash git 2>/dev/null && git init && git add . && git commit -m "Initial"
-#	kolchan-automake
+#	hash git 2>/dev/null && git init && git add . && git commit -m "Initial" && git tag -a 0.9 -m "prerelease"
+#	kolchan-automake --scan
 #
 	EOF
 
@@ -175,12 +175,12 @@ kolchan-automake::main() {
        sEmail="$EMAIL"
     sFullName="$NAME"
   elif [[ $DEBEMAIL && $DEBFULLNAME ]]; then
-    : ${sEmail:-"$DEBEMAIL"}
-    : ${sFullName:-"$DEBFULLNAME"}
+    : ${sEmail:="$DEBEMAIL"}
+    : ${sFullName:="$DEBFULLNAME"}
   fi
 
-  : ${sEmail:-${USER}@localdomain}
-  : ${sFullName:-$USER}
+  : ${sEmail:=${USER}@localdomain}
+  : ${sFullName:=$USER}
 
      sEmail="$(std::trim $sEmail)"
   sFullName="$(std::trim $sFullName)"
@@ -191,9 +191,9 @@ kolchan-automake::main() {
 
   for fn in NEWS README TODO; do [[ -f $fn ]] || touch $fn; done
 
+  : ${sVersion:=$sGitTag}
   : ${sVersion:=$(grep -i version ChangeLog | head -n 1 | xargs | cut -f 2 -d' ')}
   : ${sVersion:=$( cfg.get version )}
-  [[ $sVersion =~ git.*tag ]] && sVersion=$sGitTag
 
   throw on EmptyVariable sVersion
 

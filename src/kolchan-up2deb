@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Git: kolchan-up2deb 0.8-114-25 2022-06-13 14:23:02+04:00 yds $
+# $Git: kolchan-up2deb 0.8-114-26 2022-06-16 14:15:45+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -20,7 +20,7 @@ kolchan-up2deb::usage() {
             "2016-$(std::date %Y)"
 
 #****h* kolchan/kolchan-up2deb
-	cat <<-EOF | tr -d '#'
+	cat <<-EOF | sed -r -e "s/^#\t?//g"
 #  DESCRIPTION
 #    Easy way to create or upgrade a source code debian package from an upstream
 #    revision. Wrapper for dh_make and uupdate, used shared with other packaging
@@ -69,8 +69,8 @@ kolchan-up2deb::usage() {
 #	Initial release
 #	Version 0.01
 #	CHANGELOG
-#	hash git 2>/dev/null && git init && git add . && git commit -m "Initial"
-#	kolchan-automake && kolchan-up2deb
+#	hash git 2>/dev/null && git init && git add . && git commit -m "Initial" && git tag -a 0.9 -m "prerelease"
+#	kolchan-automake --scan && kolchan-up2deb
 	EOF
 
   exit $rc
