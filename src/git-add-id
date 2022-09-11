@@ -3,7 +3,7 @@
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
-# $Git: git-add-id 0.8-114-22 2020-05-05 14:35:37+04:00 dsyakupo $
+# $Git: git-add-id 0.8-114-26 2022-09-11 15:58:49+04:00 yds $
 #
 kolchan::git-add-id::usage() {
 
@@ -183,7 +183,8 @@ kolchan::git-add-id::main() {
     sTag='0.0'
   fi
 
-  sGit="${sTag}-$((iCommits-iTag))-${iTag}"
+  # remove lead 'v' from tag
+  sGit="${sTag#*v}-$((iCommits-iTag))-${iTag}"
 
   err::debug 2 "timestamp $tsIndexed | total commits $iCommits | git rev $sGit"
   err::debug 0 "try add to index with Revision ${iCommits}:"
