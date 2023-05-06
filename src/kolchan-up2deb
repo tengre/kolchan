@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Git: kolchan-up2deb 0.8-16-g4fc9e75-131 2019-07-19 01:53:56+04:00 yds $
+# $Git: kolchan-up2deb 0.8-114-26 2022-06-16 14:15:45+04:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -20,7 +20,7 @@ kolchan-up2deb::usage() {
             "2016-$(std::date %Y)"
 
 #****h* kolchan/kolchan-up2deb
-	cat <<-EOF | tr -d '#'
+	cat <<-EOF | sed -r -e "s/^#\t?//g"
 #  DESCRIPTION
 #    Easy way to create or upgrade a source code debian package from an upstream
 #    revision. Wrapper for dh_make and uupdate, used shared with other packaging
@@ -60,7 +60,8 @@ kolchan-up2deb::usage() {
 #	cat <<- HELLOWORLD > hello_world.c
 #	#include <stdio.h>
 #	int main() {
-#		printf( "%s\n", "hello, world!" );
+#		printf("Hello, World!\n");
+#		return 0;
 #	}
 #	HELLOWORLD
 #	cat <<- CHANGELOG > ChangeLog
@@ -68,8 +69,8 @@ kolchan-up2deb::usage() {
 #	Initial release
 #	Version 0.01
 #	CHANGELOG
-#	hash git 2>/dev/null && git init && git add . && git commit -m "Initial"
-#	kolchan-automake && kolchan-up2deb
+#	hash git 2>/dev/null && git init && git add . && git commit -m "Initial" && git tag -a 0.9 -m "prerelease"
+#	kolchan-automake --scan && kolchan-up2deb
 	EOF
 
   exit $rc
@@ -315,7 +316,7 @@ kolchan-up2deb::main() {
           cfg.set [path]target = ${pathBuilds}/${sBuildVersion}
           i=0
         fi
-        cfg.set [uupdate]timestamp = $( std::date %s )
+        cfg.set [uupdate]timestamp = $( std::date %Y-%m-%dT%H:%M:%S%z )
       else
         echo $REPLY > $fn
         err::debugf 1 '%s' '.'
