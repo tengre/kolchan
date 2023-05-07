@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Git: kolchan-automake 0.9-140-1 2022-09-11 18:12:32+04:00 yds $
+# $Git: kolchan-automake 1.0-2-142 2023-05-08 19:56:02+00:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
@@ -43,7 +43,7 @@ kolchan-automake::usage() {
 #    -v, --verbosity <number> - set DEBUGLEVEL for debug messages
 #    -V, --version ...        - set version for source
 #  USES
-#    bashlyk >= 1.94
+#    bashlyk >= 1.96
 #  AUTHOR
 #    Damir Sh. Yakupov <yds@bk.ru>
 #  EXAMPLE

@@ -1,3 +1,43 @@
+Sun, 07 May 2023 16:36:42 +0000
+  New upstream release
+        Version 1.0
+Change the content of a "Git" keyword
+- represent as a combination of the current git tag (version), the
+  number of commits since the creation of the current tag (build), the
+  total number of commits before the creation of the current tag (stable
+  revision), as well as the timestamp and ID of the author of the
+  changes
+- improve count of total number of commits
+- add pre-commit hook for "Id" and "Git" keywords supporting
+
+
+Sun, 11 Sep 2022 17:58:30 +0400
+  New upstream release
+        Version 0.9
+kolchan-automake:
+- add autoscan control option
+- disable autoscanning by default to prevent including unwanted settings
+  from external libraries, e.g. node_modules
+- generate a hierarchical list of configurations when autoscanning is
+  disabled
+- improve version and author name parsing
+git-add-id:
+- add "Git" keyword - combination of the actual tag (version), the total
+  number of commits before  setting  the  actual  tag (revision) and the
+  number of commits of the actual tag.
+- remove lead 'v' from version id
+kolchan-*:
+- improve usage example
+- use git tag first to get the current version
+- show config by debug level
+*-up2deb:
+- fixed debian files handling
+debian/control:
+- add dependency dh-make, bashlyk
+README.md:
+- add PPA link for prepared debian packages
+
+
 Sun, 09 Jun 2019 00:12:24 +0400
   New upstream release
         Version 0.8
@@ -5,20 +45,21 @@ Sun, 09 Jun 2019 00:12:24 +0400
   automake.sh  -> kolchan-automake
   build-deb.sh -> kolchan-builddeb
   uupdeb       -> kolchan-up2deb
-- added  CLI  options and configuration support, build artifacts saved to config
-  for use by other tools, improved build automation
-- added  libsys.sh  -  rsync  object  implementation,  rsync  code  replaced  by
+- add  CLI  options  and configuration support, build artifacts saved to
+  config for use by other tools, improved build automation
+- add  libsys.sh - rsync object  implementation,  rsync code replaced by
   SYS::RSYNC object
-- added debianization infrastructure
+- add debianization infrastructure
 - *-up2deb - select 'dh_make' or 'uupdate' automatically
-- improved  robodoc  EXAMPLE  section - added  reproducible example from scratch
-- improved description and usage information
+- improved  robodoc  EXAMPLE  section  - add  reproducible  example from
+  scratch
+- improve description and usage information
 - added simple architecture dependency check:
-  *-automake - check  'gcc'  keyword  from  config.log and save boolean value to
-               global section with key 'archindep'
-  *-up2deb   - set dh_make option '-i' if 'archindep' value is 'true'
-- *-builddeb - used mode 'binary' by default, 'binary' mode is transformed to
-               "all" if the 'archindep' option is true, to 'any' otherwise.
+  *-automake: check 'gcc' keyword from config.log and save boolean value
+  to global section with key 'archindep'
+  *-up2deb: set dh_make option '-i' if 'archindep' value is 'true'
+- *-builddeb: use mode 'binary' by default, 'binary' mode is transformed
+  to "all" if the 'archindep' option is true, to 'any' otherwise.
 
 
 Wed, 08 May 2019 10:48:30 +0400

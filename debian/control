@@ -2,7 +2,7 @@ Source: kolchan
 Section: devel
 Priority: optional
 Maintainer: Damir Sh. Yakupov <yds@bk.ru>
-Build-Depends: debhelper (>= 10), autotools-dev, xsltproc, robodoc, docbook-xsl, automake, patch
+Build-Depends: debhelper, autotools-dev, xsltproc, robodoc, docbook-xsl, automake, patch
 Standards-Version: 4.1.2
 Homepage: https://github.com/tengre/kolchan/
 Vcs-Git: https://github.com/tengre/kolchan.git
@@ -10,11 +10,13 @@ Vcs-Browser: https://github.com/tengre/kolchan.git
 
 Package: kolchan
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}, bashlyk (>=1.94~), debhelper (>= 10), autotools-dev, devscripts, rsync, git, dpkg-dev, xsltproc, robodoc, docbook-xsl, automake, patch, dh-make
+Depends: ${shlibs:Depends}, ${misc:Depends}, bashlyk (>=1.96~), autotools-dev, devscripts, rsync, git, dpkg-dev, xsltproc, robodoc, docbook-xsl, automake, patch, dh-make
 Description: set of bash(lyk) scripts for development and build packages
  package included next tools:
   - kolchan-automake - prepare project source with autotools support
   - kolchan-builddeb - wrapper for dpkg-buildpackage
   - kolchan-up2deb   - wrapper for uupdate and dh_make
-  - git-add-id       - wrapper for 'git add <file[s]>' with svn keyword
-    'Id' support
+  - git-add-id       - wrapper for "git add <file[s]>" with keywords
+                       support - "Id" (SVN) and specially prepared "Git"
+  - pre-commit       - pre-commit git hook handler for keywords support
+                       (located in the /usr/share/kolchan directory)
