@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Git: kolchan-up2deb 0.8-114-26 2022-06-16 14:15:45+04:00 yds $
+# $Git: kolchan-up2deb 1.0-2-142 2023-05-08 19:56:02+00:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -46,7 +46,7 @@ kolchan-up2deb::usage() {
 #                               keyword  'git-tag'  enable  last tag from git as
 #                               version
 #  USES
-#    bashlyk >= 1.94
+#    bashlyk >= 1.96
 #  AUTHOR
 #    Damir Sh. Yakupov <yds@bk.ru>
 #  EXAMPLE
@@ -159,20 +159,11 @@ kolchan-up2deb::main() {
   git status >/dev/null 2>&1
   if (( $? != 128 )) && ! LC_ALL=C git log 2>&1 | grep '^fatal:.* not have any commits' >/dev/null
   then
-
-    iBuildNumber=$((
-      $(
-        exec -c git shortlog -s          |
-          exec -c grep -o '[[:digit:]]*' |
-            exec -c xargs                |
-              exec -c tr ' ' '+'
-      )
-    ))
-
+    iBuildNumber=$(git log --oneline | wc -l)
+    # deprecated
     if ! std::isNumber $iBuildNumber; then
       [[ $PRJ_COMMITS ]] && iBuildNumber=$PRJ_COMMITS
     fi
-
   fi
 
   sVersion=$( cfg.get []version )

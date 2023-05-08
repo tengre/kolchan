@@ -1,0 +1,202 @@
+#!/usr/bin/env bash
+#
+# $Git: pre-commit 1.0-2-142 2023-05-07 13:42:59+00:00 yds $
+#
+usage() {
+  local rc=$? dt="$(stat -c %y $0)" S="$(exec -c printf -- '\044')"
+  local -a a=( $(grep -o "${S}Git: .*${S}" $0 | head -n 1) )
+
+  printf -- "\n  %s %s %s, (c) %s\n\n"                                         \
+            "${a[1]:=${0##*/}}"                                                \
+            "${a[2]:=?}"                                                       \
+            "${a[3]:=${dt%% *}}"                                               \
+            "2016-$(exec -c date +%Y)"
+
+#****h* kolchan/pre-commit
+	cat <<-EOF | tr -d '#'
+#  DESCRIPTION
+#    The "pre-commit"  git client hook implements  Subversion-style keyword "Id"
+#    substitution in source code files added to the git index.
+#    The  “Revision” part (aka “Rev”) of the keyword “Id” is the total number of
+#    completed  commits plus one expected next commit. "Author" part of the "Id"
+#    is  the  system  name  of  the current user (id -nu).  May be overloaded by
+#    special  option  "user.id"  from  git config, but like single word only for
+#    compatibility.
+#    In addition to the "Id",  the "Git" keyword is represented as a combination
+#    of the current git tag (version),  the number of commits since the creation
+#    of the current tag (build), the total number of commits before the creation
+#    of the current tag (stable revision),  and  the timestamp, ID of the author
+#    of the changes.
+#  USAGE
+#    pre-commit [ -h|--help ] | [<files> ...]
+#  ARGUMENTS
+#    -h, --help - show this usage and exit
+#    <files>    - files  for forced addition to the git index with updating the
+#                 keyword(s) "Id"/"Git" (if needed)
+#                 The  default  (no  arguments)  -  updated  keyword(s) only for
+#                 staged files, which are already included to the git repository
+#  USES
+#    bash date head git grep id sed stat xargs wc
+#  AUTHOR
+#    Damir Sh. Yakupov <yds@bk.ru>
+#  EXAMPLE
+#    git init
+#    echo '${S}Id${S}' > pre-commit.txt
+#    pre-commit pre-commit.txt
+#    output: try modify keywords for revision 1: pre-commit.txt
+#    output: modify keywords in file: "pre-commit.txt" .. successfully added to index
+#    cat pre-commit.txt
+#    output: ${S}Id pre-commit.txt 1 $(exec -c date --rfc-3339=s -u) $(id -nu) $S
+	EOF
+  exit $rc
+}
+#******
+#****f* pre-commit/isNumber
+#  USAGE
+#    isNumber <argument>
+#  DESCRIPTION
+#    Checking the argument that it is a natural number
+#    The argument is considered a number if it contains decimal digits
+#  ARGUMENTS
+#     <argument> - input data
+#  RETURNS
+#    0 - <argument> is natural number
+#    4 - <argument> is missing or empty
+#    5 - <argument> is not natural number
+#  SOURCE
+isNumber() {
+  [[ $1 =~ ^[0-9]+$ ]] && return 0
+  [[ $1 ]] || return 4
+  return 5
+}
+#******
+#****f* pre-commit/gitAddFile
+#  USAGE
+#    gitAddFile <revision> <git revision> <file>
+#  DESCRIPTION
+#    modify  existing in the <file> keyword "Id" and/or "Git" with special value
+#    and add this file to the git index
+#  ARGUMENTS
+#    <revision>      - usually total commits from 'git status -s' or 0
+#    <git revision>  - git describe output with total commits or initial value
+#    <file>          - target file for updating and indexing
+#  ERRORS
+#    1 - missing argument, <file> not found, git error
+#    2 - internal error
+#  SOURCE
+gitAddFile() {
+  local fmtGitKeywordEdit fmtSvnKeywordEdit stagedFile keywordGit keywordSvn logTag timestamp author s
+
+  logTag='modify keywords in file: '
+  fmtSvnKeywordEdit='sed -i -re "s/%sId(.*)?%s/%s/" %s'
+  fmtGitKeywordEdit='sed -i -re "s/%sGit(.*)?%s/%s/" %s'
+  keywordSvn=$1
+  keywordGit=$2
+  shift 2
+
+  if [[ ! -f $* ]]; then
+    echo "${logTag}${*:-no arguments} - file expected.." 1>&2
+    exit 1
+  fi
+
+  stagedFile="${@##*/}"
+  timestamp="$(exec -c date --rfc-3339=s -u)"
+  author="$(git config --get user.id)"
+
+  [[ $author && ! $author =~ [[:space:]] ]] || author="$(id -nu)"
+
+  for s in stagedFile keywordGit keywordSvn timestamp author; do
+    if [[ ! ${!s} ]]; then
+      echo "${logTag}internal error - variable $s is empty, abort.." 1>&2
+      exit 2
+    fi
+  done
+
+  s="$( printf '\044Id: %s %d %s %s \044\n' "$stagedFile" "$keywordSvn" "$timestamp" "$author" )"
+
+  if ! eval "$(printf "$fmtSvnKeywordEdit" '\\\$' '\\\$' '$s' '"$@"')"; then
+    echo "${logTag}warn: $@ - keyword $(printf '\044Id\044') not modified.." 1>&2
+  fi
+
+  s="$( printf '\044Git: %s %s %s %s \044\n' "$stagedFile" "$keywordGit" "$timestamp" "$author" )"
+  if ! eval "$(printf "$fmtGitKeywordEdit" '\\\$' '\\\$' '$s' '"$@"')"; then
+    echo "${logTag}warn: $@ - keyword $(printf '\044Git\044') not modified.." 1>&2
+  fi
+
+  if git add "$@"; then
+    s="successfully added to index"
+  else
+    s="indexing failed"
+  fi
+  echo "${logTag}\"${@}\" .. $s" 2>&1
+}
+#******
+
+main() {
+  local iCommits logTag='pre-commit hook: ' s sGit sNotFound=''
+  for s in date head git grep id sed stat xargs wc; do
+    hash $s 2>/dev/null || sNotFound+="$s "
+  done
+
+  if [[ $sNotFound ]]; then
+    echo "${logTag}error: required external tool(s) - ${sNotFound}, abort.." 1>&2
+    exit 3
+  fi
+
+  [[ $1 =~ ^--?h ]] && usage
+
+  git status >/dev/null 2>&1
+
+  if (( $? == 128 )); then
+    printf -- "\n  %s: %s\n  %s\n"                                         \
+              "$logTag"                                                    \
+              "Error: git repository (or any of the parent directories):"  \
+              ".git not found.."
+    return 128
+  fi
+
+  if LC_ALL=C git log 2>&1 | grep '^fatal:.* not have any commits' >/dev/null;
+  then
+    iCommits=0
+  else
+    iCommits=$(git log --oneline | wc -l)
+  fi
+
+  isNumber $iCommits || iCommits=0
+  iCommits=$((iCommits+1))
+
+  if a=$(git describe --long 2>/dev/null); then
+    a=( ${a//-/ } )
+    iTag=$((${a[$((${#a[@]}-2))]}+1))
+    isNumber $iTag || iTag='1'
+    unset a[$((${#a[@]}-1))]
+    unset a[$((${#a[@]}-1))]
+    sTag="${a[@]}"
+    sTag="${sTag// /-}"
+  else
+    iTag='1'
+    sTag='0.0'
+  fi
+
+  # remove lead 'v' from sTag
+  sGit="${sTag#*v}-${iTag}-$((iCommits-iTag))"
+
+  echo "${logTag}try modify keywords for revision ${iCommits}: $@"
+
+  if [[ $@ ]]; then
+    for s in "$@"; do
+      gitAddFile "$iCommits" "$sGit" "$s"
+    done
+  else
+    while read -t 32 s; do
+      if [[ $s =~ ^@@ ]]; then
+        gitAddFile "$iCommits" "$sGit" "${s#@@*}"
+      elif [[ $s =~ ^[AMR][AMRTDC].(.*)$ ]]; then
+        echo "${logTag}ignore keyword changing - file ${BASH_REMATCH[1]} changed since index" 1>&2
+      fi
+    done< <(git status -s | sed -re "s/^[AMR][ ].(.*)$/@@\1/")
+  fi
+}
+#
+main "$@"
+#

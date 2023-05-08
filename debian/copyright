@@ -3,11 +3,11 @@ Upstream-Name: kolchan
 Source: https://github.com/tengre/kolchan/
 
 Files: *
-Copyright: 2016-2022 Damir Sh. Yakupov <yds@bk.ru>
+Copyright: 2016-2023 Damir Sh. Yakupov <yds@bk.ru>
 License: GPL-2.0+
 
 Files: debian/*
-Copyright: 2019-2022 Damir Sh. Yakupov <yds@bk.ru>
+Copyright: 2019-2023 Damir Sh. Yakupov <yds@bk.ru>
 License: GPL-2.0+
 
 License: GPL-2.0+

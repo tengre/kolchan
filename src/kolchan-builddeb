@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# $Git: kolchan-builddeb 0.8-114-26 2022-06-16 14:15:45+04:00 yds $
+# $Git: kolchan-builddeb 1.0-2-142 2023-05-08 19:56:02+00:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -40,7 +40,7 @@ kolchan-builddeb::usage() {
 #                               the configuration file name.
 #    -v, --verbosity <number> - set DEBUGLEVEL for debug messages
 #  USES
-#    bashlyk >= 1.94
+#    bashlyk >= 1.96
 #  AUTHOR
 #    Damir Sh. Yakupov <yds@bk.ru>
 #  EXAMPLE
@@ -79,7 +79,7 @@ kolchan-builddeb::main() {
   throw on CommandNotFound dpkg-buildpackage head grep rsync sed tail wc
 
   local fn fnConfig pathTarget pathWork s sCodeName sMode sProject
-  local -a
+  local -a a
 
   CFG cfg
   cfg.bind.cli mode{m}: path-source{s}: path-target{t}: config{c}: project{p}: verbosity{v}: help{h}
