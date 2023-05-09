@@ -1,0 +1,829 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+                      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html  xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Style-Type" content="text/css" />
+<meta http-equiv="Content-type" content="text/html; charset=UTF-8" />
+<link rel="stylesheet" href="./kolchan.css" type="text/css" />
+<title>./doc/kolchan</title>
+<!-- Source: ./src/ -->
+<!-- Generated with ROBODoc Version 4.99.43 (May  3 2019) -->
+</head>
+<body>
+<div id="logo">
+<span style="float:left;">set of the bash(lyk) scripts for development and build packages</span>
+<a name="robo_top_of_doc"></a>
+<span style="float:right;">kolchan</span>
+</div> <!-- logo -->
+<h3>TABLE OF CONTENTS</h3>
+<ul>
+<li>1. <a href="#robo6">kolchan/git-add-id</a></li>
+<ul>
+<li>1.1. <a href="#robo13">git-add-id/gitAddFile</a></li>
+</ul>
+<li>2. <a href="#robo7">kolchan/kolchan-automake</a></li>
+<li>3. <a href="#robo8">kolchan/kolchan-builddeb</a></li>
+<li>4. <a href="#robo9">kolchan/kolchan-robodoc</a></li>
+<li>5. <a href="#robo10">kolchan/kolchan-up2deb</a></li>
+<li>6. <a href="#robo11">kolchan/libsys</a></li>
+<ul>
+<li>6.1. <a href="#robo0">libsys/Used libraries</a></li>
+<li>6.2. <a href="#robo1">libsys/Global Variables</a></li>
+<li>6.3. <a href="#robo2">libsys/SYS::RSYNC</a></li>
+<li>6.4. <a href="#robo3">libsys/SYS::RSYNC::free</a></li>
+<li>6.5. <a href="#robo4">libsys/SYS::RSYNC::run</a></li>
+<li>6.6. <a href="#robo5">libsys/SYS::RSYNC::settings</a></li>
+</ul>
+<li>7. <a href="#robo12">kolchan/pre-commit</a></li>
+<ul>
+<li>7.1. <a href="#robo15">pre-commit/gitAddFile</a></li>
+<li>7.2. <a href="#robo16">pre-commit/isNumber</a></li>
+</ul>
+<li>8. <a href="#robo14">kolchan/kolchan-automake::scanConfigFiles</a></li>
+</ul>
+<a name="robo6"></a>
+<a name="kolchan2fgit2dadd2did"></a>
+<h1>1.  kolchan/git-add-id [ Modules ]  </h1>
+<p>[ <a href="#robo_top_of_doc">Top</a> ] [ Modules ]</p>
+<p class="item_name">DESCRIPTION</p>
+<pre>    Easy  way  to  emulate  compound  SVN keyword "Id" without using git hooks.
+    The  “Revision” part (aka “Rev”) of the keyword “Id” is the total number of
+    completed  commits plus one expected next commit. "Author" part of the "Id"
+    is  the  system  name  of  the current user (id -nu).  May be overloaded by
+    special  option  "user.id"  from  git config, but like single word only for
+    compatibility. The  "Id"  value  is updated before adding to the git index.
+    In addition to the "Id",  the "Git" keyword is represented as a combination
+    of the current git tag (version),  the number of commits since the creation
+    of the current tag (build), the total number of commits before the creation
+    of the current tag (stable revision),  and  the timestamp, ID of the author
+    of the changes.
+</pre>
+<p class="item_name">USAGE</p>
+<pre>    <strong>git-add-id</strong> [ -h|--help ] | [&lt;files&gt; ...]
+</pre>
+<p class="item_name">ARGUMENTS</p>
+<pre>    -h, --help - show this usage and exit
+    &lt;files&gt;    - files for forced addition to the git index with updating the
+                 keyword(s) "Id"/"Git" (if needed)
+                 The default (no arguments) - added only modified files, which
+                 are already included to the git repository.
+</pre>
+<p class="item_name">USES</p>
+<pre>    bashlyk &gt;= 1.96
+</pre>
+<p class="item_name">AUTHOR</p>
+<pre>    Damir Sh. Yakupov &lt;yds@bk.ru&gt;
+</pre>
+<p class="item_name">EXAMPLE</p>
+<pre>    git init
+    echo '${S}Id${S}' &gt; git-add-id.txt
+    <strong>git-add-id</strong> git-add-id.txt
+    output: try add to index with Revision 1:
+    output: modify keywords in file: "git-add-id.txt" .. successfully added to index
+    cat git-add-id.txt
+    output: ${S}Id git-add-id.txt 1 $(exec -c date --rfc-3339=s -u) $(id -nu) $S
+</pre>
+<a name="robo13"></a>
+<a name="git2dadd2did2fgitAddFile"></a>
+<h2>1.1.  git-add-id/gitAddFile [ Functions ]  </h2>
+<p>[ <a href="#robo_top_of_doc">Top</a> ] [ <a href="#robo6">git-add-id</a> ] [ Functions ]</p>
+<p class="item_name">USAGE</p>
+<pre>    <strong>gitAddFile</strong> &lt;revision&gt; &lt;git revision&gt; &lt;file&gt;
+</pre>
+<p class="item_name">DESCRIPTION</p>
+<pre>    modify  existing in the &lt;file&gt; keyword "Id" and/or "Git" with special value
+    and add this file to the git index
+</pre>
+<p class="item_name">ARGUMENTS</p>
+<pre>    &lt;revision&gt;      - usually total commits from 'git status -s' or 0
+    &lt;git revision&gt;  - git describe output with total commits or initial value
+    &lt;file&gt;          - target file for updating and indexing
+</pre>
+<p class="item_name">ERRORS</p>
+<pre>    NoSuchFileOrDir - &lt;file&gt; not found or missing argument
+    InvalidArgument - &lt;file&gt; is directory
+    EmptyVariable   - internal error
+  RETURNS
+    0 - &lt;file&gt; added to index
+    1 - &lt;file&gt; failed add to index
+</pre>
+<p class="item_name">SOURCE</p>
+<pre class="source"><strong>gitAddFile</strong><span class="sign">(</span><span class="sign">)</span> <span class="sign">{</span>
+
+  local author fmtGitKeywordEdit fmtSvnKeywordEdit keywordGit keywordSvn logTag rc s stagedFile timestamp
+
+  fmtGitKeywordEdit<span class="sign">=</span><span class="squote">'sed -i -re "s/%sGit(.*)?%s/%s/" %s'</span>
+  fmtSvnKeywordEdit<span class="sign">=</span><span class="squote">'sed -i -re "s/%sId(.*)?%s/%s/" %s'</span>
+  logTag<span class="sign">=</span><span class="squote">'modify keywords in file: '</span>
+
+  keywordSvn<span class="sign">=</span><span class="sign">$</span>1
+  keywordGit<span class="sign">=</span><span class="sign">$</span>2
+  shift 2
+
+  errorify on NoSuchFile <span class="sign">$</span><span class="sign">*</span> <span class="sign">|</span><span class="sign">|</span>
+    error warn<span class="sign">+</span>return <span class="quote">"${logTag}${*:-no arguments} - file expected.."</span>
+
+  stagedFile<span class="sign">=</span><span class="quote">"${@##*/}"</span>
+  timestamp<span class="sign">=</span><span class="quote">"$(exec -c date --rfc-3339=s -u)"</span>
+  author<span class="sign">=</span><span class="quote">"$(git config --get user.id)"</span>
+
+  <span class="sign">[</span><span class="sign">[</span> <span class="sign">$</span>author <span class="sign">&amp;</span><span class="sign">&amp;</span> <span class="sign">!</span> <span class="sign">$</span>author <span class="sign">=</span><span class="sign">~</span> <span class="sign">[</span><span class="sign">[</span><span class="sign">:</span>space<span class="sign">:</span><span class="sign">]</span><span class="sign">]</span> <span class="sign">]</span><span class="sign">]</span> <span class="sign">|</span><span class="sign">|</span> author<span class="sign">=</span><span class="quote">"$( _ sUser )"</span>
+
+  throw on EmptyVariable author keywordGit keywordSvn stagedFile timestamp
+
+  s<span class="sign">=</span><span class="quote">"$( printf '\044Id: %s %d %s %s \044\n' "</span><span class="sign">$</span>stagedFile<span class="quote">" "</span><span class="sign">$</span>keywordSvn<span class="quote">" "</span><span class="sign">$</span>timestamp<span class="quote">" "</span><span class="sign">$</span>author<span class="quote">" )"</span>
+
+  if <span class="sign">!</span> eval <span class="quote">"$( printf "</span><span class="sign">$</span>fmtSvnKeywordEdit<span class="quote">" '\\\$' '\\\$' '$s' '"</span><span class="sign">$</span><span class="sign">@</span><span class="quote">"')"</span><span class="sign">;</span> then
+    error warn <span class="quote">"${logTag}${@} - keyword $(printf '\044Id\044') not modified.."</span>
+  fi
+
+  s<span class="sign">=</span><span class="quote">"$( printf '\044Git: %s %s %s %s \044\n' "</span><span class="sign">$</span>stagedFile<span class="quote">" "</span><span class="sign">$</span><span class="sign">{</span>keywordGit<span class="sign">}</span><span class="quote">" "</span><span class="sign">$</span>timestamp<span class="quote">" "</span><span class="sign">$</span>author<span class="quote">" )"</span>
+  if <span class="sign">!</span> eval <span class="quote">"$( printf "</span><span class="sign">$</span>fmtGitKeywordEdit<span class="quote">" '\\\$' '\\\$' '$s' '"</span><span class="sign">$</span><span class="sign">@</span><span class="quote">"')"</span><span class="sign">;</span> then
+    error warn <span class="quote">"${logTag}${@} - keyword $(printf '\044Git\044') not modified.."</span>
+  fi
+
+  if <span class="sign">!</span> git add <span class="quote">"$@"</span><span class="sign">;</span> then
+    err<span class="sign">:</span><span class="sign">:</span>debug 0 <span class="quote">"${logTag}\"${@}\" .. failed add to index"</span>
+    return 1
+  fi
+  err<span class="sign">:</span><span class="sign">:</span>debug 0 <span class="quote">"${logTag}\"${@}\" .. successfully added to index"</span>
+  return 0
+<span class="sign">}</span>
+</pre>
+<a name="robo7"></a>
+<a name="kolchan2fkolchan2dautomake"></a>
+<h1>2.  kolchan/kolchan-automake [ Modules ]  </h1>
+<p>[ <a href="#robo_top_of_doc">Top</a> ] [ Modules ]</p>
+<p class="item_name">DESCRIPTION</p>
+<pre>    building a project using autotools based on the prepared Automake.am files
+    in each subdirectory. ChangeLog file is also required. Supported format:
+        &lt;date (date -R stdout)&gt;
+        &lt;release comment (new, bugfix, ...)&gt;
+        Version &lt;version string&gt;
+</pre>
+<p class="item_name">USAGE</p>
+<pre>    <strong>kolchan-automake</strong> &lt;options&gt;
+</pre>
+<p class="item_name">ARGUMENTS</p>
+<pre>    -h, --help               - show this usage and exit
+    -c, --config &lt;name&gt;      - set config file (full path or short name)
+    -p, --project &lt;name&gt;     - set project name.  If  no  configuration file is
+                               specified,  the project name is used to generate
+                               the configuration file name.
+    -s, --path-source &lt;path&gt; - select source path. Maybe read from config file.
+                               Default is a current directory.
+    -N, --noscan             - disable autoscan for preliminary configuration,
+                               this is default.
+    -Y, --scan               - enable autoscan for preliminary configuration.
+                               Warning:  may  include  unwanted dependencies of
+                               external modules, e.g. from node_modules
+    -v, --verbosity &lt;number&gt; - set DEBUGLEVEL for debug messages
+    -V, --version ...        - set version for source
+</pre>
+<p class="item_name">USES</p>
+<pre>    bashlyk &gt;= 1.96
+</pre>
+<p class="item_name">AUTHOR</p>
+<pre>    Damir Sh. Yakupov &lt;yds@bk.ru&gt;
+</pre>
+<p class="item_name">EXAMPLE</p>
+<pre>       mkdir -p ~/src/hello-world
+       cd       ~/src/hello-world
+       cat &lt;&lt;- MAKEFILE &gt; Makefile.am
+       hello_world_SOURCES = hello_world.c
+       bin_PROGRAMS        = hello_world
+       DESTDIR             =
+       MAKEFILE
+       cat &lt;&lt;- HELLOWORLD &gt; hello_world.c
+       #include &lt;stdio.h&gt;
+       int main() {
+               printf("Hello, World!\n");
+               return 0;
+       }
+       HELLOWORLD
+       cat &lt;&lt;- CHANGELOG &gt; ChangeLog
+       $( date -R )
+       Initial release
+       Version 0.01
+       CHANGELOG
+
+       hash git 2&gt;/dev/null &amp;&amp; git init &amp;&amp; git add . &amp;&amp; git commit -m "Initial" &amp;&amp; git tag -a 0.9 -m "prerelease"
+       <strong>kolchan-automake</strong> --scan
+
+</pre>
+<a name="robo8"></a>
+<a name="kolchan2fkolchan2dbuilddeb"></a>
+<h1>3.  kolchan/kolchan-builddeb [ Modules ]  </h1>
+<p>[ <a href="#robo_top_of_doc">Top</a> ] [ Modules ]</p>
+<p class="item_name">DESCRIPTION</p>
+<pre>    Easy  way  to  build  debian  package.  Wrapper for dpkg-buildpackage, used
+    shared with other packaging tools configuration. This useful for automation
+    build  process  - jenkins pipelines and other CI. Expected prepared package
+    source and configuration file by early runned <a href="#robo10">kolchan-up2deb</a>
+</pre>
+<p class="item_name">USAGE</p>
+<pre>    <strong>kolchan-builddeb</strong> &lt;options&gt;
+</pre>
+<p class="item_name">ARGUMENTS</p>
+<pre>    -h, --help               - show this usage and exit
+    -m, --mode &lt;mode&gt;        - select build mode as source|any|all|binary|full.
+                               Default is a 'binary'.
+    -t, --path-target &lt;path&gt; - select package build path. Maybe get from config
+                               Default is a current directory.
+    -c, --config &lt;name&gt;      - set config file (full path or short name)
+    -p, --project &lt;name&gt;     - set project name.  If  no  configuration file is
+                               specified,  the project name is used to generate
+                               the configuration file name.
+    -v, --verbosity &lt;number&gt; - set DEBUGLEVEL for debug messages
+</pre>
+<p class="item_name">USES</p>
+<pre>    bashlyk &gt;= 1.96
+</pre>
+<p class="item_name">AUTHOR</p>
+<pre>    Damir Sh. Yakupov &lt;yds@bk.ru&gt;
+</pre>
+<p class="item_name">EXAMPLE</p>
+<pre>       mkdir -p ~/src/hello-world
+       cd       ~/src/hello-world
+       cat &lt;&lt;- MAKEFILE &gt; Makefile.am
+       hello_world_SOURCES = hello_world.c
+       bin_PROGRAMS        = hello_world
+       DESTDIR             =
+       MAKEFILE
+       cat &lt;&lt;- HELLOWORLD &gt; hello_world.c
+       #include &lt;stdio.h&gt;
+       int main() {
+               printf("Hello, World!\n");
+               return 0;
+       }
+       HELLOWORLD
+       cat &lt;&lt;- CHANGELOG &gt; ChangeLog
+       $( date -R )
+       Initial release
+       Version 0.01
+       CHANGELOG
+       hash git 2&gt;/dev/null &amp;&amp; git init &amp;&amp; git add . &amp;&amp; git commit -m "Initial" &amp;&amp; git tag -a 0.9 -m "prerelease"
+       <a href="#robo7">kolchan-automake</a> --scan &amp;&amp; <a href="#robo10">kolchan-up2deb</a> &amp;&amp; <strong>kolchan-builddeb</strong>
+</pre>
+<a name="robo9"></a>
+<a name="kolchan2fkolchan2drobodoc"></a>
+<h1>4.  kolchan/kolchan-robodoc [ Modules ]  </h1>
+<p>[ <a href="#robo_top_of_doc">Top</a> ] [ Modules ]</p>
+<p class="item_name">DESCRIPTION</p>
+<pre>    This tool is designed to generate RoboDoc files  outside  of the process of
+    building packages from source due to the lack of a robodoc package in  some
+    modern distributions. Need to run before <a href="#robo7">kolchan-automake</a>
+</pre>
+<p class="item_name">USAGE</p>
+<pre>    <strong>kolchan-robodoc</strong> [ -h|--help ] | [[ --path &lt;path&gt;] [ --name &lt;name&gt; ]]
+</pre>
+<p class="item_name">ARGUMENTS</p>
+<pre>    -h, --help        - show this usage and exit
+    -p, --path &lt;path&gt; - path to the configuration file robodoc.rc, by default
+                        current folder
+    -n, --name &lt;name&gt; - project name, by default short name of current folder
+</pre>
+<p class="item_name">USES</p>
+<pre>    bashlyk &gt;= 1.96
+</pre>
+<p class="item_name">AUTHOR</p>
+<pre>    Damir Sh. Yakupov &lt;yds@bk.ru&gt;
+</pre>
+<p class="item_name">EXAMPLE</p>
+<pre>    <strong>kolchan-robodoc</strong>
+</pre>
+<a name="robo10"></a>
+<a name="kolchan2fkolchan2dup2deb"></a>
+<h1>5.  kolchan/kolchan-up2deb [ Modules ]  </h1>
+<p>[ <a href="#robo_top_of_doc">Top</a> ] [ Modules ]</p>
+<p class="item_name">DESCRIPTION</p>
+<pre>    Easy way to create or upgrade a source code debian package from an upstream
+    revision. Wrapper for dh_make and uupdate, used shared with other packaging
+    tools  configuration. This  useful  for  automation build process - jenkins
+    pipelines and other CI. Expected  prepared source and configuration file by
+    early runned <a href="#robo7">kolchan-automake</a>
+</pre>
+<p class="item_name">USAGE</p>
+<pre>    <strong>kolchan-up2deb</strong> &lt;options&gt;
+</pre>
+<p class="item_name">ARGUMENTS</p>
+<pre>    -h, --help               - show this usage and exit
+    -c, --config &lt;name&gt;      - set config file (full path or short name)
+    -p, --project &lt;name&gt;     - set project name.  If  no  configuration file is
+                               specified,  the project name is used to generate
+                               the configuration file name.
+    -s, --path-source &lt;path&gt; - select source path. Maybe read from config file.
+                               Default is a current directory.
+    -t, --path-target &lt;path&gt; - select package tree root path. May  be read from
+                               config. Default is a ~/builds
+    -B, --basebuild ...      - use  this  build version for upgrade. Maybe used
+                               special keyword 'init' for create package source
+    -v, --verbosity &lt;number&gt; - set DEBUGLEVEL for debug messages
+    -V, --version            - set  version  for target package source. Special
+                               keyword  'git-tag'  enable  last tag from git as
+                               version
+</pre>
+<p class="item_name">USES</p>
+<pre>    bashlyk &gt;= 1.96
+</pre>
+<p class="item_name">AUTHOR</p>
+<pre>    Damir Sh. Yakupov &lt;yds@bk.ru&gt;
+</pre>
+<p class="item_name">EXAMPLE</p>
+<pre>       mkdir -p ~/src/hello-world
+       cd       ~/src/hello-world
+       cat &lt;&lt;- MAKEFILE &gt; Makefile.am
+       hello_world_SOURCES = hello_world.c
+       bin_PROGRAMS        = hello_world
+       DESTDIR             =
+       MAKEFILE
+       cat &lt;&lt;- HELLOWORLD &gt; hello_world.c
+       #include &lt;stdio.h&gt;
+       int main() {
+               printf("Hello, World!\n");
+               return 0;
+       }
+       HELLOWORLD
+       cat &lt;&lt;- CHANGELOG &gt; ChangeLog
+       $( date -R )
+       Initial release
+       Version 0.01
+       CHANGELOG
+       hash git 2&gt;/dev/null &amp;&amp; git init &amp;&amp; git add . &amp;&amp; git commit -m "Initial" &amp;&amp; git tag -a 0.9 -m "prerelease"
+       <a href="#robo7">kolchan-automake</a> --scan &amp;&amp; <strong>kolchan-up2deb</strong>
+</pre>
+<a name="robo11"></a>
+<a name="kolchan2flibsys"></a>
+<h1>6.  kolchan/libsys [ Modules ]  </h1>
+<p>[ <a href="#robo_top_of_doc">Top</a> ] [ Modules ]</p>
+<p class="item_name">DESCRIPTION</p>
+<pre>    OOP style wrappers for various system commands:
+    <a href="#robo2">SYS::RSYNC</a> - support for rsync
+</pre>
+<p class="item_name">USES</p>
+<pre>    libcfg
+</pre>
+<p class="item_name">EXAMPLE</p>
+<pre>    # create instance from <a href="#robo2">SYS::RSYNC</a> class
+    <a href="#robo2">SYS::RSYNC</a> rsync
+    # set various properties for rsync operation
+    rsync.pathSource = /tmp/source
+    rsync.pathTarget = /tmp/target
+    rsync.options    = -aCrv --delete-after
+    rsync.debugLevel = 2
+    rsync.title      = sync $( rsync.pathSource) to $( rsync.pathTarget )
+    rsync.onSuccess  = rm -r $( rsync.pathSource)
+    # start rsync
+    rsync.run
+    # destroy <a href="#robo2">SYS::RSYNC</a> object, free resources
+    rsync.free
+</pre>
+<p class="item_name">AUTHOR</p>
+<pre>    Damir Sh. Yakupov &lt;yds@bk.ru&gt;
+</pre>
+<a name="robo0"></a>
+<a name="libsys2fUsed20libraries"></a>
+<h2>6.1.  libsys/Used libraries [ External libraries ]  </h2>
+<p>[ <a href="#robo_top_of_doc">Top</a> ] [ <a href="#robo11">libsys</a> ] [ External libraries ]</p>
+<p class="item_name">DESCRIPTION</p>
+<pre>   Loading external libraries
+</pre>
+<p class="item_name">SOURCE</p>
+<pre class="source"><span class="sign">[</span><span class="sign">[</span> <span class="sign">-</span>s <span class="sign">$</span><span class="sign">{</span>_bashlyk_pathLib<span class="sign">}</span><span class="sign">/</span>libcfg<span class="sign">.</span>sh <span class="sign">]</span><span class="sign">]</span> <span class="sign">&amp;</span><span class="sign">&amp;</span> <span class="sign">.</span> <span class="quote">"${_bashlyk_pathLib}/libcfg.sh"</span>
+</pre>
+<a name="robo1"></a>
+<a name="libsys2fGlobal20Variables"></a>
+<h2>6.2.  libsys/Global Variables [ Global variables ]  </h2>
+<p>[ <a href="#robo_top_of_doc">Top</a> ] [ <a href="#robo11">libsys</a> ] [ Global variables ]</p>
+<p class="item_name">DESCRIPTION</p>
+<pre>    Global variables of the library
+</pre>
+<p class="item_name">SOURCE</p>
+<pre class="source"><span class="sign">#</span> rsync error states definition
+ _rsync_hError<span class="sign">[</span>0<span class="sign">]</span><span class="sign">=</span><span class="quote">"Success"</span>
+ _rsync_hError<span class="sign">[</span>1<span class="sign">]</span><span class="sign">=</span><span class="quote">"Syntax or usage error"</span>
+ _rsync_hError<span class="sign">[</span>2<span class="sign">]</span><span class="sign">=</span><span class="quote">"Protocol incompatibility"</span>
+ _rsync_hError<span class="sign">[</span>3<span class="sign">]</span><span class="sign">=</span><span class="quote">"Errors selecting input/output files, dirs"</span>
+ _rsync_hError<span class="sign">[</span>4<span class="sign">]</span><span class="sign">=</span><span class="quote">"Requested action not supported: an attempt was made to manipulate 64-bit files on a platform that cannot support them; or an option was specified that is supported by the client and not by the server."</span>
+ _rsync_hError<span class="sign">[</span>5<span class="sign">]</span><span class="sign">=</span><span class="quote">"Error starting client-server protocol"</span>
+ _rsync_hError<span class="sign">[</span>6<span class="sign">]</span><span class="sign">=</span><span class="quote">"Daemon unable to append to log-file"</span>
+_rsync_hError<span class="sign">[</span>10<span class="sign">]</span><span class="sign">=</span><span class="quote">"Error in socket I/O"</span>
+_rsync_hError<span class="sign">[</span>11<span class="sign">]</span><span class="sign">=</span><span class="quote">"Error in file I/O"</span>
+_rsync_hError<span class="sign">[</span>12<span class="sign">]</span><span class="sign">=</span><span class="quote">"Error in rsync protocol data stream"</span>
+_rsync_hError<span class="sign">[</span>13<span class="sign">]</span><span class="sign">=</span><span class="quote">"Errors with program diagnostics"</span>
+_rsync_hError<span class="sign">[</span>14<span class="sign">]</span><span class="sign">=</span><span class="quote">"Error in IPC code"</span>
+_rsync_hError<span class="sign">[</span>20<span class="sign">]</span><span class="sign">=</span><span class="quote">"Received SIGUSR1 or SIGINT"</span>
+_rsync_hError<span class="sign">[</span>21<span class="sign">]</span><span class="sign">=</span><span class="quote">"Some error returned by waitpid()"</span>
+_rsync_hError<span class="sign">[</span>22<span class="sign">]</span><span class="sign">=</span><span class="quote">"Error allocating core memory buffers"</span>
+_rsync_hError<span class="sign">[</span>23<span class="sign">]</span><span class="sign">=</span><span class="quote">"Partial transfer due to error"</span>
+_rsync_hError<span class="sign">[</span>24<span class="sign">]</span><span class="sign">=</span><span class="quote">"Partial transfer due to vanished source files"</span>
+_rsync_hError<span class="sign">[</span>25<span class="sign">]</span><span class="sign">=</span><span class="quote">"The --max-delete limit stopped deletions"</span>
+_rsync_hError<span class="sign">[</span>30<span class="sign">]</span><span class="sign">=</span><span class="quote">"Timeout in data send/receive"</span>
+_rsync_hError<span class="sign">[</span>35<span class="sign">]</span><span class="sign">=</span><span class="quote">"Timeout waiting for daemon connection"</span>
+<span class="sign">#</span>
+_bashlyk_iErrorMissingMethod<span class="sign">=</span>165
+_bashlyk_iErrorBadMethod<span class="sign">=</span>164
+_bashlyk_hError<span class="sign">[</span><span class="sign">$</span>_bashlyk_iErrorMissingMethod<span class="sign">]</span><span class="sign">=</span><span class="quote">"instance failed - missing method"</span>
+_bashlyk_hError<span class="sign">[</span><span class="sign">$</span>_bashlyk_iErrorBadMethod<span class="sign">]</span><span class="sign">=</span><span class="quote">"instance failed - bad method"</span>
+<span class="sign">#</span>
+declare <span class="sign">-</span>rg _bashlyk_settings_sys_rsync<span class="sign">=</span><span class="squote">'
+    debugLevel fileLog onFailure onSuccess options pathSource pathTarget title truncateLog
+'</span>
+declare <span class="sign">-</span>rg _bashlyk_methods_sys_rsync<span class="sign">=</span><span class="squote">'
+    run free
+'</span>
+</pre>
+<a name="robo2"></a>
+<a name="libsys2fSYS3a3aRSYNC"></a>
+<h2>6.3.  libsys/SYS::RSYNC [ external function ]  </h2>
+<p>[ <a href="#robo_top_of_doc">Top</a> ] [ <a href="#robo11">libsys</a> ] [ external function ]</p>
+<p class="item_name">SYNOPSIS</p>
+<pre>    <strong>SYS::RSYNC</strong> [&lt;id&gt;]
+</pre>
+<p class="item_name">DESCRIPTION</p>
+<pre>    constructor for new instance &lt;id&gt; of the <strong>SYS::RSYNC</strong> "class" (object)
+</pre>
+<p class="item_name">NOTES</p>
+<pre>    constructor
+</pre>
+<p class="item_name">ARGUMENTS</p>
+<pre>    valid variable name for created instance, default - used class name RSYNC as
+    instance
+</pre>
+<p class="item_name">ERRORS</p>
+<pre>    InvalidVariable  - invalid variable name for instance
+    IniMissingMethod - method not found
+    IniBadMethod     - bad method
+</pre>
+<p class="item_name">EXAMPLE</p>
+<pre>    <strong>SYS::RSYNC</strong> tnew                                                           #? true
+    declare -f tnew.title &gt;/dev/null 2&gt;&amp;1                                     #= true
+    declare -f tnew.run   &gt;/dev/null 2&gt;&amp;1                                     #= true
+    declare -f tnew.free  &gt;/dev/null 2&gt;&amp;1                                     #= true
+    tnew.free
+</pre>
+<p class="item_name">SOURCE</p>
+<pre class="source"><strong>SYS::RSYNC</strong><span class="sign">(</span><span class="sign">)</span> <span class="sign">{</span>
+
+  local f fn s o<span class="sign">=</span><span class="sign">$</span><span class="sign">{</span>1<span class="sign">:</span><span class="sign">-</span>RSYNC<span class="sign">}</span>
+
+  throw on InvalidVariable <span class="sign">$</span>o
+
+  CFG <span class="sign">$</span><span class="sign">{</span>o<span class="sign">}</span>_settings
+
+  std<span class="sign">:</span><span class="sign">:</span>temp fn path<span class="sign">=</span><span class="quote">"${TMPDIR}/${USER}/bashlyk"</span> prefix<span class="sign">=</span><span class="squote">'sys.rsync'</span> suffix<span class="sign">=</span><span class="quote">".${o}"</span>
+
+  f<span class="sign">=</span><span class="sign">$</span><span class="sign">(</span> declare <span class="sign">-</span>f <a href="#robo5">SYS::RSYNC::settings</a> 2<span class="sign">&gt;</span><span class="sign">/</span>dev<span class="sign">/</span>null <span class="sign">)</span> <span class="sign">|</span><span class="sign">|</span> error MissingMethod throw <span class="sign">-</span><span class="sign">-</span> <a href="#robo5">SYS::RSYNC::settings</a> for <span class="sign">$</span>o
+  for s in <span class="sign">$</span>_bashlyk_settings_sys_rsync<span class="sign">;</span> do
+
+    echo <span class="quote">"${f/<a href="#robo5">SYS::RSYNC::settings</a>/${o}.$s}"</span> <span class="sign">&gt;</span><span class="sign">&gt;</span> <span class="sign">$</span>fn  <span class="sign">|</span><span class="sign">|</span> error BadMethod     throw <span class="sign">-</span><span class="sign">-</span> <a href="#robo5">SYS::RSYNC::settings</a> for <span class="sign">$</span>o
+
+  done
+
+  for s in <span class="sign">$</span>_bashlyk_methods_sys_rsync<span class="sign">;</span> do
+
+    f<span class="sign">=</span><span class="sign">$</span><span class="sign">(</span> declare <span class="sign">-</span>f SYS<span class="sign">:</span><span class="sign">:</span>RSYNC<span class="sign">:</span><span class="sign">:</span><span class="sign">$</span><span class="sign">{</span>s<span class="sign">}</span> 2<span class="sign">&gt;</span><span class="sign">/</span>dev<span class="sign">/</span>null <span class="sign">)</span> <span class="sign">|</span><span class="sign">|</span> error MissingMethod throw <span class="sign">-</span><span class="sign">-</span> SYS<span class="sign">:</span><span class="sign">:</span>RSYNC<span class="sign">:</span><span class="sign">:</span><span class="sign">$</span><span class="sign">{</span>s<span class="sign">}</span> for <span class="sign">$</span>o
+    echo <span class="quote">"${f/SYS::RSYNC::$s/${o}.$s}"</span> <span class="sign">&gt;</span><span class="sign">&gt;</span> <span class="sign">$</span>fn      <span class="sign">|</span><span class="sign">|</span> error BadMethod     throw <span class="sign">-</span><span class="sign">-</span> SYS<span class="sign">:</span><span class="sign">:</span>RSYNC<span class="sign">:</span><span class="sign">:</span><span class="sign">$</span><span class="sign">{</span>s<span class="sign">}</span> for <span class="sign">$</span>o
+
+  done
+
+  source <span class="sign">$</span>fn <span class="sign">|</span><span class="sign">|</span> error InvalidArgument throw <span class="sign">$</span>fn
+  return 0
+
+<span class="sign">}</span>
+</pre>
+<a name="robo3"></a>
+<a name="libsys2fSYS3a3aRSYNC3a3afree"></a>
+<h2>6.4.  libsys/SYS::RSYNC::free [ external function ]  </h2>
+<p>[ <a href="#robo_top_of_doc">Top</a> ] [ <a href="#robo11">libsys</a> ] [ external function ]</p>
+<p class="item_name">SYNOPSIS</p>
+<pre>    <strong>SYS::RSYNC::free</strong>
+</pre>
+<p class="item_name">DESCRIPTION</p>
+<pre>    destructor of the instance
+</pre>
+<p class="item_name">NOTES</p>
+<pre>    public method
+</pre>
+<p class="item_name">EXAMPLE</p>
+<pre>    local i o s
+    <a href="#robo2">SYS::RSYNC</a> tRsync
+    tRsync.title = rsync instance test
+    tRsync.free                                                                 #? true
+    declare -f tRsync.title                                                     #? false
+</pre>
+<p class="item_name">SOURCE</p>
+<pre class="source"><strong>SYS::RSYNC::free</strong><span class="sign">(</span><span class="sign">)</span> <span class="sign">{</span>
+
+  local o s
+
+  o<span class="sign">=</span><span class="sign">$</span><span class="sign">{</span>FUNCNAME<span class="sign">[</span>0<span class="sign">]</span><span class="sign">%</span><span class="sign">%</span><span class="sign">.</span><span class="sign">*</span><span class="sign">}</span>
+
+  <span class="sign">$</span><span class="sign">{</span>o<span class="sign">}</span>_settings<span class="sign">.</span>free
+
+  for s in <span class="sign">$</span>_bashlyk_settings_sys_rsync <span class="sign">$</span>_bashlyk_methods_sys_rsync<span class="sign">;</span> do
+
+    unset <span class="sign">-</span>f <span class="sign">$</span><span class="sign">{</span>o<span class="sign">}</span><span class="sign">.</span><span class="sign">$</span>s
+
+  done
+
+<span class="sign">}</span>
+</pre>
+<a name="robo4"></a>
+<a name="libsys2fSYS3a3aRSYNC3a3arun"></a>
+<h2>6.5.  libsys/SYS::RSYNC::run [ external function ]  </h2>
+<p>[ <a href="#robo_top_of_doc">Top</a> ] [ <a href="#robo11">libsys</a> ] [ external function ]</p>
+<p class="item_name">SYNOPSIS</p>
+<pre>    <strong>SYS::RSYNC::run</strong>
+</pre>
+<p class="item_name">DESCRIPTION</p>
+<pre>    run rsync configured by instance
+</pre>
+<p class="item_name">NOTES</p>
+<pre>    public method
+</pre>
+<p class="item_name">ERRORS</p>
+<pre>    child processes
+</pre>
+<p class="item_name">TODO</p>
+<pre>    improve verbosity level handling
+</pre>
+<p class="item_name">EXAMPLE</p>
+<pre>    mkdir -p /tmp/qwaszx1
+    date -R &gt; /tmp/qwaszx1/qwaszx3.txt
+    <a href="#robo2">SYS::RSYNC</a> rsync
+    rsync.pathSource = /tmp/qwaszx1/
+    rsync.onSuccess  = rm -r /tmp/qwaszx1
+    rsync.pathTarget = /tmp/qwaszx2
+    rsync.run
+    test -f /tmp/qwaszx2/qwaszx3.txt                                           #? false
+    test -f /tmp/qwaszx2/qwaszx3.txt                                           #? true
+    rm -r /tmp/qwaszx{1,2}
+    rsync.free
+</pre>
+<p class="item_name">SOURCE</p>
+<pre class="source"><strong>SYS::RSYNC::run</strong><span class="sign">(</span><span class="sign">)</span> <span class="sign">{</span>
+
+  local I fnErr fnStd fnRC rc o s V
+  local <span class="sign">-</span>a a
+
+  o<span class="sign">=</span><span class="sign">$</span><span class="sign">{</span>FUNCNAME<span class="sign">[</span>0<span class="sign">]</span><span class="sign">%</span><span class="sign">%</span><span class="sign">.</span><span class="sign">*</span><span class="sign">}</span>
+  I<span class="sign">=</span><span class="sign">$</span><span class="sign">(</span> <span class="sign">$</span><span class="sign">{</span>o<span class="sign">}</span><span class="sign">.</span>truncateLog <span class="sign">)</span>
+  <span class="sign">:</span> <span class="sign">$</span><span class="sign">{</span>DEBUGLEVEL<span class="sign">:</span><span class="sign">=</span><span class="sign">$</span><span class="sign">(</span> <span class="sign">$</span><span class="sign">{</span>o<span class="sign">}</span><span class="sign">.</span>debugLevel <span class="sign">)</span><span class="sign">}</span>
+
+  err<span class="sign">:</span><span class="sign">:</span>debugf 1 <span class="squote">'%s:&gt;'</span> <span class="quote">"$( ${o}.title )"</span>
+
+  std<span class="sign">:</span><span class="sign">:</span>temp fnErr
+  std<span class="sign">:</span><span class="sign">:</span>temp fnRC
+  std<span class="sign">:</span><span class="sign">:</span>temp fnStd
+  <span class="sign">$</span><span class="sign">{</span>o<span class="sign">}</span><span class="sign">.</span>fileLog <span class="sign">=</span> <span class="sign">$</span>fnStd
+
+  while read<span class="sign">;</span> do
+
+    err<span class="sign">:</span><span class="sign">:</span>debugf 1 <span class="squote">'%s'</span> <span class="squote">'.'</span>
+    echo <span class="quote">"$REPLY"</span> <span class="sign">&gt;</span><span class="sign">&gt;</span> <span class="sign">$</span>fnStd
+
+  done<span class="sign">&lt;</span> <span class="sign">&lt;</span><span class="sign">(</span> rsync <span class="sign">$</span><span class="sign">(</span> <span class="sign">$</span><span class="sign">{</span>o<span class="sign">}</span><span class="sign">.</span>options <span class="sign">)</span> <span class="sign">$</span><span class="sign">(</span> <span class="sign">$</span><span class="sign">{</span>o<span class="sign">}</span><span class="sign">.</span>pathSource <span class="sign">)</span> <span class="sign">$</span><span class="sign">(</span> <span class="sign">$</span><span class="sign">{</span>o<span class="sign">}</span><span class="sign">.</span>pathTarget <span class="sign">)</span> 2<span class="sign">&gt;</span><span class="sign">$</span>fnErr<span class="sign">;</span> echo <span class="sign">$</span><span class="sign">?</span> <span class="sign">&gt;</span><span class="sign">$</span>fnRC <span class="sign">)</span>
+
+  rc<span class="sign">=</span><span class="sign">$</span><span class="sign">(</span> <span class="sign">&lt;</span> <span class="sign">$</span>fnRC <span class="sign">)</span>
+  if <span class="sign">(</span><span class="sign">(</span> rc <span class="sign">&gt;</span> 0 <span class="sign">)</span><span class="sign">)</span><span class="sign">;</span> then
+
+    err<span class="sign">:</span><span class="sign">:</span>debug 1 <span class="squote">'fail..'</span>
+    a<span class="sign">=</span><span class="sign">(</span> <span class="sign">$</span><span class="sign">(</span> wc <span class="sign">-</span>l <span class="sign">$</span>fnErr <span class="sign">)</span> <span class="sign">)</span>
+
+    <span class="sign">(</span><span class="sign">(</span> <span class="sign">$</span><span class="sign">{</span>a<span class="sign">[</span>0<span class="sign">]</span><span class="sign">}</span> <span class="sign">=</span><span class="sign">=</span> 1 <span class="sign">)</span><span class="sign">)</span> <span class="sign">|</span><span class="sign">|</span> err<span class="sign">:</span><span class="sign">:</span>debug 1 <span class="squote">'warns:'</span>
+
+    if <span class="sign">(</span><span class="sign">(</span> <span class="sign">$</span><span class="sign">{</span>a<span class="sign">[</span>0<span class="sign">]</span><span class="sign">}</span> <span class="sign">&gt;</span> I <span class="sign">)</span><span class="sign">)</span><span class="sign">;</span> then
+
+      head <span class="sign">-</span>n <span class="sign">$</span><span class="sign">(</span><span class="sign">(</span> I<span class="sign">/</span>2 <span class="sign">)</span><span class="sign">)</span> <span class="sign">$</span>fnErr <span class="sign">&amp;</span><span class="sign">&amp;</span> echo <span class="squote">'...'</span> <span class="sign">&amp;</span><span class="sign">&amp;</span> tail <span class="sign">-</span>n <span class="sign">$</span><span class="sign">(</span><span class="sign">(</span> I<span class="sign">/</span>2 <span class="sign">)</span><span class="sign">)</span> <span class="sign">$</span>fnErr
+
+    else
+
+      <span class="sign">(</span><span class="sign">(</span> <span class="sign">$</span><span class="sign">{</span>a<span class="sign">[</span>0<span class="sign">]</span><span class="sign">}</span> <span class="sign">&gt;</span> 0 <span class="sign">)</span><span class="sign">)</span> <span class="sign">&amp;</span><span class="sign">&amp;</span> std<span class="sign">:</span><span class="sign">:</span>cat <span class="sign">&lt;</span> <span class="sign">$</span>fnErr
+
+    fi <span class="sign">&gt;</span><span class="sign">&amp;</span>2
+
+    _bashlyk_hError<span class="sign">[</span><span class="sign">$</span>rc<span class="sign">]</span><span class="sign">=</span><span class="quote">"${_rsync_hError[$rc]}"</span>
+    s<span class="sign">=</span><span class="quote">"$( ${o}.onFailure )"</span>
+
+    if <span class="sign">[</span><span class="sign">[</span> <span class="sign">$</span>s <span class="sign">=</span><span class="sign">~</span> <span class="sign">^</span><span class="sign">(</span>echo<span class="sign">|</span>warn<span class="sign">|</span>return<span class="sign">|</span>echo<span class="sign">\</span><span class="sign">+</span>return<span class="sign">|</span>warn<span class="sign">\</span><span class="sign">+</span>return<span class="sign">|</span>exit<span class="sign">|</span>echo<span class="sign">\</span><span class="sign">+</span>exit<span class="sign">|</span>warn<span class="sign">\</span><span class="sign">+</span>exit<span class="sign">|</span>throw<span class="sign">)</span><span class="sign">$</span> <span class="sign">]</span><span class="sign">]</span><span class="sign">;</span> then
+
+      error <span class="sign">$</span>rc <span class="sign">$</span>s <span class="sign">-</span><span class="sign">-</span> rsync<span class="sign">:</span> <span class="sign">$</span><span class="sign">(</span> <span class="sign">$</span><span class="sign">{</span>o<span class="sign">}</span><span class="sign">.</span>pathSource <span class="sign">)</span> <span class="sign">-</span> <span class="sign">$</span><span class="sign">(</span> <span class="sign">$</span><span class="sign">{</span>o<span class="sign">}</span><span class="sign">.</span>pathTarget <span class="sign">)</span>
+
+    else
+
+      <span class="sign">[</span><span class="sign">[</span> <span class="sign">$</span>s <span class="sign">]</span><span class="sign">]</span> <span class="sign">&amp;</span><span class="sign">&amp;</span> eval <span class="quote">"$s"</span>
+
+    fi
+
+    return <span class="sign">$</span>rc
+
+  else
+
+    err<span class="sign">:</span><span class="sign">:</span>debug 1 <span class="squote">'ok!'</span>
+    s<span class="sign">=</span><span class="quote">"$( ${o}.onSuccess )"</span> <span class="sign">&amp;</span><span class="sign">&amp;</span> eval <span class="quote">"$s"</span>
+    return 0
+
+  fi
+<span class="sign">}</span>
+</pre>
+<a name="robo5"></a>
+<a name="libsys2fSYS3a3aRSYNC3a3asettings"></a>
+<h2>6.6.  libsys/SYS::RSYNC::settings [ internal function ]  </h2>
+<p>[ <a href="#robo_top_of_doc">Top</a> ] [ <a href="#robo11">libsys</a> ] [ internal function ]</p>
+<p class="item_name">SYNOPSIS</p>
+<pre>    <strong>SYS::RSYNC::settings</strong> [ &lt;value&gt; ]
+</pre>
+<p class="item_name">DESCRIPTION</p>
+<pre>    set or get propertie(s) of the <a href="#robo2">SYS::RSYNC</a> instance
+</pre>
+<p class="item_name">ARGUMENTS</p>
+<pre>    &lt;value&gt; - set new value for selected properties
+              default, show property value
+</pre>
+<p class="item_name">NOTES</p>
+<pre>    fully virtual function, replaced by "get/set" methods when initializing an
+    instance:
+
+    title       - title message
+    options     - rsync options
+    pathSource  - source
+    pathTarget  - destination
+    truncateLog - max error lines to show
+    debugLevel  - debug level
+    onFailure   - run command on rsync fail
+    onSuccess   - run command on rsync success
+    fileLog     - name of a temporary file to save rsync stdout (may be readonly)
+</pre>
+<p class="item_name">EXAMPLE</p>
+<pre>    <a href="#robo2">SYS::RSYNC</a> tSettings
+    tSettings.title       = value
+    tSettings.pathSource  = /tmp/source
+    tSettings.pathTarget  = /tmp/target
+    tSettings.options     = --aCrv --delete-after
+    tSettings.debugLevel  = 2
+    tSettings.truncateLog = 10
+    tSettings.title                                                            | {{ '^value$'     }}
+    tSettings.pathSource                                                       | {{ ^/tmp/source$ }}
+    tSettings.pathTarget                                                       | {{ ^/tmp/target$ }}
+    tSettings.free
+</pre>
+<p class="item_name">SOURCE</p>
+<pre class="source"><strong>SYS::RSYNC::settings</strong><span class="sign">(</span><span class="sign">)</span> <span class="sign">{</span>
+
+  local o<span class="sign">=</span><span class="sign">$</span><span class="sign">{</span>FUNCNAME<span class="sign">[</span>0<span class="sign">]</span><span class="sign">%</span><span class="sign">%</span><span class="sign">.</span><span class="sign">*</span><span class="sign">}</span> f<span class="sign">=</span><span class="sign">$</span><span class="sign">{</span>FUNCNAME<span class="sign">[</span>0<span class="sign">]</span><span class="sign">#</span><span class="sign">*</span><span class="sign">.</span><span class="sign">}</span>
+  <span class="sign">[</span><span class="sign">[</span> <span class="sign">$</span><span class="sign">*</span> <span class="sign">]</span><span class="sign">]</span> <span class="sign">&amp;</span><span class="sign">&amp;</span> <span class="sign">$</span><span class="sign">{</span>o<span class="sign">}</span>_settings<span class="sign">.</span>set <span class="sign">$</span>f <span class="sign">$</span><span class="sign">*</span> <span class="sign">|</span><span class="sign">|</span> <span class="sign">$</span><span class="sign">{</span>o<span class="sign">}</span>_settings<span class="sign">.</span>get <span class="sign">$</span>f
+
+<span class="sign">}</span>
+</pre>
+<a name="robo12"></a>
+<a name="kolchan2fpre2dcommit"></a>
+<h1>7.  kolchan/pre-commit [ Modules ]  </h1>
+<p>[ <a href="#robo_top_of_doc">Top</a> ] [ Modules ]</p>
+<p class="item_name">DESCRIPTION</p>
+<pre>    The "pre-commit"  git client hook implements  Subversion-style keyword "Id"
+    substitution in source code files added to the git index.
+    The  “Revision” part (aka “Rev”) of the keyword “Id” is the total number of
+    completed  commits plus one expected next commit. "Author" part of the "Id"
+    is  the  system  name  of  the current user (id -nu).  May be overloaded by
+    special  option  "user.id"  from  git config, but like single word only for
+    compatibility.
+    In addition to the "Id",  the "Git" keyword is represented as a combination
+    of the current git tag (version),  the number of commits since the creation
+    of the current tag (build), the total number of commits before the creation
+    of the current tag (stable revision),  and  the timestamp, ID of the author
+    of the changes.
+</pre>
+<p class="item_name">USAGE</p>
+<pre>    <strong>pre-commit</strong> [ -h|--help ] | [&lt;files&gt; ...]
+</pre>
+<p class="item_name">ARGUMENTS</p>
+<pre>    -h, --help - show this usage and exit
+    &lt;files&gt;    - files  for forced addition to the git index with updating the
+                 keyword(s) "Id"/"Git" (if needed)
+                 The  default  (no  arguments)  -  updated  keyword(s) only for
+                 staged files, which are already included to the git repository
+</pre>
+<p class="item_name">USES</p>
+<pre>    bash date head git grep id sed stat xargs wc
+</pre>
+<p class="item_name">AUTHOR</p>
+<pre>    Damir Sh. Yakupov &lt;yds@bk.ru&gt;
+</pre>
+<p class="item_name">EXAMPLE</p>
+<pre>    git init
+    echo '${S}Id${S}' &gt; pre-commit.txt
+    <strong>pre-commit</strong> pre-commit.txt
+    output: try modify keywords for revision 1: pre-commit.txt
+    output: modify keywords in file: "pre-commit.txt" .. successfully added to index
+    cat pre-commit.txt
+    output: ${S}Id pre-commit.txt 1 $(exec -c date --rfc-3339=s -u) $(id -nu) $S
+</pre>
+<a name="robo15"></a>
+<a name="pre2dcommit2fgitAddFile"></a>
+<h2>7.1.  pre-commit/gitAddFile [ Functions ]  </h2>
+<p>[ <a href="#robo_top_of_doc">Top</a> ] [ <a href="#robo12">pre-commit</a> ] [ Functions ]</p>
+<p class="item_name">USAGE</p>
+<pre>    <strong>gitAddFile</strong> &lt;revision&gt; &lt;git revision&gt; &lt;file&gt;
+</pre>
+<p class="item_name">DESCRIPTION</p>
+<pre>    modify  existing in the &lt;file&gt; keyword "Id" and/or "Git" with special value
+    and add this file to the git index
+</pre>
+<p class="item_name">ARGUMENTS</p>
+<pre>    &lt;revision&gt;      - usually total commits from 'git status -s' or 0
+    &lt;git revision&gt;  - git describe output with total commits or initial value
+    &lt;file&gt;          - target file for updating and indexing
+</pre>
+<p class="item_name">ERRORS</p>
+<pre>    1 - missing argument, &lt;file&gt; not found, git error
+    2 - internal error
+</pre>
+<p class="item_name">SOURCE</p>
+<pre class="source"><strong>gitAddFile</strong><span class="sign">(</span><span class="sign">)</span> <span class="sign">{</span>
+  local fmtGitKeywordEdit fmtSvnKeywordEdit stagedFile keywordGit keywordSvn logTag timestamp author s
+
+  logTag<span class="sign">=</span><span class="squote">'modify keywords in file: '</span>
+  fmtSvnKeywordEdit<span class="sign">=</span><span class="squote">'sed -i -re "s/%sId(.*)?%s/%s/" %s'</span>
+  fmtGitKeywordEdit<span class="sign">=</span><span class="squote">'sed -i -re "s/%sGit(.*)?%s/%s/" %s'</span>
+  keywordSvn<span class="sign">=</span><span class="sign">$</span>1
+  keywordGit<span class="sign">=</span><span class="sign">$</span>2
+  shift 2
+
+  if <span class="sign">[</span><span class="sign">[</span> <span class="sign">!</span> <span class="sign">-</span>f <span class="sign">$</span><span class="sign">*</span> <span class="sign">]</span><span class="sign">]</span><span class="sign">;</span> then
+    echo <span class="quote">"${logTag}${*:-no arguments} - file expected.."</span> 1<span class="sign">&gt;</span><span class="sign">&amp;</span>2
+    exit 1
+  fi
+
+  stagedFile<span class="sign">=</span><span class="quote">"${@##*/}"</span>
+  timestamp<span class="sign">=</span><span class="quote">"$(exec -c date --rfc-3339=s -u)"</span>
+  author<span class="sign">=</span><span class="quote">"$(git config --get user.id)"</span>
+
+  <span class="sign">[</span><span class="sign">[</span> <span class="sign">$</span>author <span class="sign">&amp;</span><span class="sign">&amp;</span> <span class="sign">!</span> <span class="sign">$</span>author <span class="sign">=</span><span class="sign">~</span> <span class="sign">[</span><span class="sign">[</span><span class="sign">:</span>space<span class="sign">:</span><span class="sign">]</span><span class="sign">]</span> <span class="sign">]</span><span class="sign">]</span> <span class="sign">|</span><span class="sign">|</span> author<span class="sign">=</span><span class="quote">"$(id -nu)"</span>
+
+  for s in stagedFile keywordGit keywordSvn timestamp author<span class="sign">;</span> do
+    if <span class="sign">[</span><span class="sign">[</span> <span class="sign">!</span> <span class="sign">$</span><span class="sign">{</span><span class="sign">!</span>s<span class="sign">}</span> <span class="sign">]</span><span class="sign">]</span><span class="sign">;</span> then
+      echo <span class="quote">"${logTag}internal error - variable $s is empty, abort.."</span> 1<span class="sign">&gt;</span><span class="sign">&amp;</span>2
+      exit 2
+    fi
+  done
+
+  s<span class="sign">=</span><span class="quote">"$( printf '\044Id: %s %d %s %s \044\n' "</span><span class="sign">$</span>stagedFile<span class="quote">" "</span><span class="sign">$</span>keywordSvn<span class="quote">" "</span><span class="sign">$</span>timestamp<span class="quote">" "</span><span class="sign">$</span>author<span class="quote">" )"</span>
+
+  if <span class="sign">!</span> eval <span class="quote">"$(printf "</span><span class="sign">$</span>fmtSvnKeywordEdit<span class="quote">" '\\\$' '\\\$' '$s' '"</span><span class="sign">$</span><span class="sign">@</span><span class="quote">"')"</span><span class="sign">;</span> then
+    echo <span class="quote">"${logTag}warn: $@ - keyword $(printf '\044Id\044') not modified.."</span> 1<span class="sign">&gt;</span><span class="sign">&amp;</span>2
+  fi
+
+  s<span class="sign">=</span><span class="quote">"$( printf '\044Git: %s %s %s %s \044\n' "</span><span class="sign">$</span>stagedFile<span class="quote">" "</span><span class="sign">$</span>keywordGit<span class="quote">" "</span><span class="sign">$</span>timestamp<span class="quote">" "</span><span class="sign">$</span>author<span class="quote">" )"</span>
+  if <span class="sign">!</span> eval <span class="quote">"$(printf "</span><span class="sign">$</span>fmtGitKeywordEdit<span class="quote">" '\\\$' '\\\$' '$s' '"</span><span class="sign">$</span><span class="sign">@</span><span class="quote">"')"</span><span class="sign">;</span> then
+    echo <span class="quote">"${logTag}warn: $@ - keyword $(printf '\044Git\044') not modified.."</span> 1<span class="sign">&gt;</span><span class="sign">&amp;</span>2
+  fi
+
+  if git add <span class="quote">"$@"</span><span class="sign">;</span> then
+    s<span class="sign">=</span><span class="quote">"successfully added to index"</span>
+  else
+    s<span class="sign">=</span><span class="quote">"indexing failed"</span>
+  fi
+  echo <span class="quote">"${logTag}\"${@}\" .. $s"</span> 2<span class="sign">&gt;</span><span class="sign">&amp;</span>1
+<span class="sign">}</span>
+</pre>
+<a name="robo16"></a>
+<a name="pre2dcommit2fisNumber"></a>
+<h2>7.2.  pre-commit/isNumber [ Functions ]  </h2>
+<p>[ <a href="#robo_top_of_doc">Top</a> ] [ <a href="#robo12">pre-commit</a> ] [ Functions ]</p>
+<p class="item_name">USAGE</p>
+<pre>    <strong>isNumber</strong> &lt;argument&gt;
+</pre>
+<p class="item_name">DESCRIPTION</p>
+<pre>    Checking the argument that it is a natural number
+    The argument is considered a number if it contains decimal digits
+</pre>
+<p class="item_name">ARGUMENTS</p>
+<pre>     &lt;argument&gt; - input data
+  RETURNS
+    0 - &lt;argument&gt; is natural number
+    4 - &lt;argument&gt; is missing or empty
+    5 - &lt;argument&gt; is not natural number
+</pre>
+<p class="item_name">SOURCE</p>
+<pre class="source"><strong>isNumber</strong><span class="sign">(</span><span class="sign">)</span> <span class="sign">{</span>
+  <span class="sign">[</span><span class="sign">[</span> <span class="sign">$</span>1 <span class="sign">=</span><span class="sign">~</span> <span class="sign">^</span><span class="sign">[</span>0<span class="sign">-</span>9<span class="sign">]</span><span class="sign">+</span><span class="sign">$</span> <span class="sign">]</span><span class="sign">]</span> <span class="sign">&amp;</span><span class="sign">&amp;</span> return 0
+  <span class="sign">[</span><span class="sign">[</span> <span class="sign">$</span>1 <span class="sign">]</span><span class="sign">]</span> <span class="sign">|</span><span class="sign">|</span> return 4
+  return 5
+<span class="sign">}</span>
+</pre>
+<a name="robo14"></a>
+<a name="kolchan2fkolchan2dautomake3a3ascanConfigFiles"></a>
+<h1>8.  kolchan/kolchan-automake::scanConfigFiles [ Functions ]  </h1>
+<p>[ <a href="#robo_top_of_doc">Top</a> ] [ Functions ]</p>
+<p class="item_name">DESCRIPTION</p>
+<pre>    generate AC_CONFIG_FILES options as autoscan
+
+</pre>
+<div id="footer">
+<p>Generated from ./src/ with <a href="http://www.xs4all.nl/~rfsber/Robo/robodoc.html">ROBODoc</a> V4.99.43 on 2023-05-09 13:25:36+00:00
+</p>
+</div> <!-- footer -->
+</body>
+</html>

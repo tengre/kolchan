@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# $Git: kolchan-up2deb 1.0-2-142 2023-05-08 19:56:02+00:00 yds $
+# $Git: kolchan-up2deb 1.0-3-142 2023-05-09 13:14:09+00:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 
@@ -268,7 +268,7 @@ kolchan-up2deb::main() {
     fi
     dh_make -y -${s} -c gpl2 --file ../${sBuildVersion}.tar.gz
     cfg.set [dh_make]status    = $?
-    cfg.set [dh_make]timestamp = $( std::date %s )
+    cfg.set [dh_make]timestamp = $( std::date %Y-%m-%dT%H:%M:%S%z )
     cfg.set    [path]target    = ${pathBuilds}/${sBuildVersion}
     if [[ -d debian.upstream ]]; then
       SYS::RSYNC rsync
