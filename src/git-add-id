@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 #
+# $Git: git-add-id 1.0-3-142 2023-05-09 13:03:11+00:00 yds $
 #
 _bashlyk_log=nouse _bashlyk=kolchan . bashlyk
 #
-# $Git: git-add-id 1.0-2-142 2023-05-08 19:56:02+00:00 yds $
+#
 #
 kolchan::git-add-id::usage() {
 
@@ -136,7 +137,7 @@ kolchan::git-add-id::main() {
     return 128
   fi
 
-  tsIndexed="$(git log -1 --pretty=format:"%ci" 2>/dev/null | cut -f1 -d' ')"
+  tsIndexed="$(exec -c date --rfc-3339=s -u --date "$(git log -1 --pretty=format:"%cI" 2>/dev/null)" 2>/dev/null)"
 
   if LC_ALL=C git log 2>&1 | grep '^fatal:.* not have any commits' >/dev/null;
   then

@@ -16,11 +16,10 @@ configure
 configure.ac
 doc/Makefile
 doc/Makefile.in
-doc/kolchan.css
-doc/kolchan.html
+#doc/kolchan.css
+#doc/kolchan.html
 install-sh
 missing
 src/Makefile
 src/Makefile.in
 .gitconfig
-
